@@ -4,10 +4,9 @@
 #include <Arduino.h>
 
 #include "Define.h"
+#include "Driver.h"
 #include "Motor.h"
 #include "Motors.h"
-#include "Pulse.h"
-#include "Types.h"
 
 class Device {
    private:
@@ -16,6 +15,8 @@ class Device {
     static Motor* motorSec2;  // secondary motor 2
 
    public:
+    static uint64_t acceptMicros;
+    static uint64_t acceptCount;
     static bool begin();
 
     /**
@@ -23,7 +24,8 @@ class Device {
      */
     static void reset(double x, double y);
 
-    static bool accept(block_device_____t& dstDevice);  // accept a new destination coordinate and immediately start moving to, or drawing to that coordinate
+    // static bool accept(block_device_____t& dstDevice);  // accept a new destination coordinate and immediately start moving to, or drawing to that coordinate
+    static bool accept(block_planxy_d___t dstPlanxy);  // accept a new destination coordinate and immediately start moving to, or drawing to that coordinate
 
     static void pulse();
 

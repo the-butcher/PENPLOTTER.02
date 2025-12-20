@@ -1,14 +1,14 @@
-#define MOTOR_A_STEP_PIN 2
-#define MOTOR_A_DRCT_PIN 5
-#define MOTOR_A_MICR_PIN 19
+// #define MOTOR_A_STEP_PIN 2
+// #define MOTOR_A_DRCT_PIN 5
+// #define MOTOR_A_MICR_PIN 19
 
-#define MOTOR_B_STEP_PIN 3
-#define MOTOR_B_DRCT_PIN 6
-#define MOTOR_B_MICR_PIN 18
+// #define MOTOR_B_STEP_PIN 3
+// #define MOTOR_B_DRCT_PIN 6
+// #define MOTOR_B_MICR_PIN 18
 
-#define MOTOR_Z_STEP_PIN 4
-#define MOTOR_Z_DRCT_PIN 7
-#define MOTOR_Z_MICR_PIN -1
+// #define MOTOR_Z_STEP_PIN 4
+// #define MOTOR_Z_DRCT_PIN 7
+// #define MOTOR_Z_MICR_PIN -1
 
 #define MOTOR___STEPS_MM 40
 #define MOTOR_Z_STEPS_MM 60
@@ -41,3 +41,90 @@
 
 #define MICROSECONDS_PER_SECOND 1000000
 #define MAX_FREQUENCY 6000.0
+
+#ifndef Define_h
+#define Define_h
+
+#include <Arduino.h>
+
+/**
+ * internal representation of a planar coordinate
+ * double used to avoid float problems in interrupts
+ * https://forum.arduino.cc/t/how-to-do-simple-float-calculations-in-a-interrupt-handler-on-nodemcu-esp32/915384
+ */
+typedef struct {
+    double x;          // x coord with respect to x home (mm)
+    double y;          // y coord with respect to y home (mm)
+    double z;          // z coord with respect to z home (mm)
+} coord_planxy_d___t;  // 24 bytes
+
+/**
+ * communication representation of a planar coordinate
+ * float used to save space in bluetooth communication
+ */
+typedef struct {
+    float x;           // x coord with respect to x home (mm)
+    float y;           // y coord with respect to y home (mm)
+    float z;           // z coord with respect to z home (mm)
+} coord_planxy_f___t;  // 12 bytes
+
+/**
+ * internal representation of a planar distance with entry and exit speeds
+ * double used to avoid float problems in interrupts
+ * https://forum.arduino.cc/t/how-to-do-simple-float-calculations-in-a-interrupt-handler-on-nodemcu-esp32/915384
+ */
+typedef struct {
+    double x;          // exit x coord with respect to x home (mm)
+    double y;          // exit y coord with respect to y home (mm)
+    double z;          // exit z coord with respect to z home (mm)
+    double vi;         // entry speed (mm/s)
+    double vo;         // exit speed (mm/s)
+} block_planxy_d___t;  // 40 bytes
+
+/**
+ * internal representation of a planar distance with entry and exit speeds
+ * float used to save space in bluetooth communication
+ */
+typedef struct {
+    float x;           // exit x coord with respect to x home (mm)
+    float y;           // exit y coord with respect to y home (mm)
+    float z;           // exit z coord with respect to z home (mm)
+    float vi;          // entry speed (mm/s)
+    float vo;          // exit speed (mm/s)
+} block_planxy_f___t;  // 20 bytes
+
+typedef struct {
+    int32_t a;         // left motor coord (microstep settings as of motor-A constants)
+    int32_t b;         // right motor coord (microstep settings as of motor-B constants)
+    int32_t z;         // pen motor coord (microstep settings as of motor-Z constants)
+} coord_corexy_____t;  // 12 bytes
+
+typedef enum {
+    PIN_STATUS__LOW,
+    PIN_STATUS_HIGH
+} pin_status_______e;
+
+typedef struct {
+    uint8_t microMlt;              // the microstep multiplier of this setting (4, 8, 16, 32)
+    pin_status_______e microVal0;  // status to be set on the microstep pin M0 to achieve the given microstep resolution
+    pin_status_______e microVal1;  // status to be set on the microstep pin M1 to achieve the given microstep resolution
+    pin_status_______e microVal2;  // status to be set on the microstep pin M2 to achieve the given microstep resolution
+} motor_microstep__t;
+
+typedef struct {
+    pin_status_______e directVal;      // status to be set on the direction pin
+    int8_t counterIncrement;           // increment to be applied to the counter, either +1 or -1
+    motor_microstep__t settingsMicro;  // microstep settings (resolution, pin values)
+} motor_settings___t;                  // 24 bytes
+
+// typedef struct {
+//     block_planxy_d___t dstPlanxy;  // the destination coordinate
+//     coord_corexy_____t vecCorexy;  // the corexy vector for reference (microstepping not multiplied yet)
+//     motor_settings___t settingsA;  // motorSettings A (direction, microstepping, ...)
+//     motor_settings___t settingsB;  // motorSettings B (direction, microstepping, ...)
+//     motor_settings___t settingsZ;  // motorSettings Z (direction, microstepping, ...)
+//     double lengthPlanxy;           // length to destination in mm
+//     uint64_t microsTotal;          // total duration in microseconds to complete this block
+// } block_device_____t;              // 144 bytes
+
+#endif

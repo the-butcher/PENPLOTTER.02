@@ -1,18 +1,8 @@
-- create Bluetooth logic to determine BT capabilities
-- check how many segments can be kept in memory (should be a lot more than the ArduinoR4)
+- how would the r-value affect frequency and microstepping calculation?
 
-- create Motor code (all 4) to be able to make a valid estimation on how much time a single pulse will consume
+  - being an angular measurement, would it be a 4-th dimension or would it have to be calculated separately?
+  - create a poc in javascript
 
-- see what happens if code runs longer than a single pulse allows, is there a way to "lock" and skip pulses (or dynamically adapt frequency)
-
-- check if precision allows (entry position will always be exact) precalculation of segment values
-
-  - this would allow for segments to be prepared on the main thread and then be used in the interrupt function, this would keep the potential interrupt run time shorter since it would only have to process pulses and nothing else
-
-- what benefit would adding a display have?
-
-  - bluetooth connection status could be indicated through the neopixel led
-    ? available memory
-    ? frequency
-
-- would be nice to be able to recalibrate after pen change though
+- create a new struct having int32 planar values (scaled) and another Device::accept method for that type
+  - [ ] work step by step and replace further doubles with fixed numbers
+  - [x] revisit and understand the on the fly frequency calculation in Device::pulse

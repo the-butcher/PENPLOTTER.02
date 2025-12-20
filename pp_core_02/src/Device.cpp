@@ -20,6 +20,9 @@ bool Device::homedX = false;
 bool Device::homedY = false;
 bool Device::homedZ = false;
 
+uint64_t Device::acceptMicros = 0;
+uint64_t Device::acceptCount = 0;
+
 bool Device::begin() {
     return true;
 }
@@ -28,7 +31,7 @@ void Device::reset(double x, double y) {
 
     // calculate current position
     coord_corexy_____t curCorexy = Motors::getCurCorexy();
-    coord_planxy_____t curPlanxy = Coords::corexyToPlanxy(curCorexy);
+    coord_planxy_d___t curPlanxy = Coords::corexyToPlanxy(curCorexy);
 
     // adjust current position
     curPlanxy = {x, y, curPlanxy.z};
@@ -40,7 +43,7 @@ void Device::reset(double x, double y) {
 }
 
 void Device::yield() {
-    Pulse::yield();
+    Driver::yield();
     Device::motorPrim = nullptr;
     Device::motorSec1 = nullptr;
     Device::motorSec2 = nullptr;
@@ -51,7 +54,7 @@ void Device::yield() {
  */
 void Device::pulse() {
 
-    // TODO :: switches
+    // TODO :: limit switches
 
     // exectute a single bresenham step, https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
     if (Device::motorPrim != nullptr) {
@@ -70,54 +73,27 @@ void Device::pulse() {
 
         Device::cPrim++;
         if (Device::cPrim >= Device::dPrim) {  // counter has reached the segment delta
-            // TODO :: segment complete, find new destination coordinate
-            if (Coords::hasBlock()) {  // check if there is more blocks to be handled at the moment
-                // Serial.println("-- block :: coords --> device (pulse1) --------------------------------");
-                block_device_____t currBlock = Coords::popBlock();  // TODO :: revisit bluetooth implementation to verify that indices for picking a block never get corrupted by appending blocks
-                Device::accept(currBlock);
+            if (Coords::hasBlock()) {          // check if there is more blocks to be handled at the moment
+                Device::accept(Coords::popBlock());
             } else {
                 Device::yield();
             }
         } else {
             if (Device::frqI != Device::frqO) {
+                // v²=v0²+2as // https://www.studysmarter.de/schule/physik/mechanik/gleichmaessig-beschleunigte-bewegung/
                 double frequencyC = sqrt(Device::frqA2 * Device::cPrim + Device::frqII);
-                Pulse::setFrequency(frequencyC);
+                Driver::setFrequency(frequencyC);
             }
         }
 
     } else if (Coords::hasBlock()) {
-        // Serial.println("-- block :: coords --> device (pulse2) --------------------------------");
-        block_device_____t dstDevice = Coords::popBlock();
-        Device::accept(dstDevice);
+        Device::accept(Coords::popBlock());
     }
 }
 
-bool Device::accept(block_device_____t& dstDevice) {
+bool Device::accept(block_planxy_d___t dstPlanxy) {
 
-    block_planxy_____t dstPlanxy = dstDevice.dstPlanxy;
-    // coord_corexy_____t vecCorexy = dstDevice.vecCorexy;
-
-    coord_corexy_____t srcCorexy = Motors::getCurCorexy();
-    coord_corexy_____t dstCorexy = Coords::planxyToCorexy(dstPlanxy);
-    coord_corexy_____t vecCorexy = Coords::toCorexyVector(srcCorexy, dstCorexy);
-
-    if (vecCorexy.a != dstDevice.vecCorexy.a || vecCorexy.b != dstDevice.vecCorexy.b || vecCorexy.z != dstDevice.vecCorexy.z) {
-        Serial.println("vecCorexy inconsistency: ");
-        if (vecCorexy.a != dstDevice.vecCorexy.a) {
-            Serial.print(vecCorexy.a);
-            Serial.print(" a ");
-            Serial.println(dstDevice.vecCorexy.a);
-        }
-        if (vecCorexy.b != dstDevice.vecCorexy.b) {
-            Serial.print(vecCorexy.b);
-            Serial.print(" b ");
-            Serial.println(dstDevice.vecCorexy.b);
-        }
-        coord_planxy_____t srcPlanxy = Coords::corexyToPlanxy(srcCorexy);
-        dstDevice = Coords::toDeviceBlock(srcPlanxy, dstPlanxy);
-    } else {
-        // Serial.println("vecCorexy consistent");
-    }
+    uint64_t acceptMicrosA = micros();
 
     if (dstPlanxy.z == VALUE______RESET) {
 
@@ -129,18 +105,90 @@ bool Device::accept(block_device_____t& dstDevice) {
         dstPlanxy.y = 0;
         dstPlanxy.z = 10;
 
-        // TODO :: if there are any further coordinates in buffer, these likely need to be recalculated!!
+        // with the very high z-value, normal acceleration calc would not work, therefore setting default velocities
+        dstPlanxy.vi = MACHINE_HOME_V_Z;
+        dstPlanxy.vo = MACHINE_HOME_V_Z;
+    }
+
+    // TODO :: check if this case still occurs and maybe handle in another way
+    if (dstPlanxy.vi == 0 && dstPlanxy.vo == 0) {
+        dstPlanxy.vi = MACHINE_HOME_VXY;
+        dstPlanxy.vo = MACHINE_HOME_VXY;
+    }
+
+    // src coordinates
+    coord_corexy_____t srcCorexy = Motors::getCurCorexy();             // where the machine is in terms of motor counters
+    coord_planxy_d___t srcPlanxy = Coords::corexyToPlanxy(srcCorexy);  // where the machine is in planar space
+
+    // destination coordinate
+    coord_corexy_____t dstCorexy = Coords::planxyToCorexy(dstPlanxy);  // where the machine needs to go in planar space
+
+    // vectors to reach destination
+    coord_corexy_____t vecCorexy = Coords::toCorexyVector(srcCorexy, dstCorexy);
+    coord_planxy_d___t vecPlanxy = Coords::toPlanxyVector(srcPlanxy, dstPlanxy);
+
+    // ~ 19 microseconds
+
+    // planar distance to reach destination
+    double lengthPlanxy = sqrt(vecPlanxy.x * vecPlanxy.x + vecPlanxy.y * vecPlanxy.y + vecPlanxy.z * vecPlanxy.z);  // Coords::toLength(vecPlanxy);
+
+    // ~ 26 microseconds
+
+    // duration to reach destination (each block needs to have linear acceleration or constant speed)
+    uint64_t microsTotal = lengthPlanxy * 2 * MICROSECONDS_PER_SECOND / (dstPlanxy.vi + dstPlanxy.vo);
+
+    // ~ 29 microseconds
+
+    uint32_t baseStepsA = abs(vecCorexy.a);
+    uint32_t baseStepsB = abs(vecCorexy.b);
+    uint32_t baseStepsZ = abs(vecCorexy.z);
+
+    // seconds = length(mm) / speed(mm/s), inverse value used here
+    double maxVMult = lengthPlanxy != 0.0 ? max(dstPlanxy.vi, dstPlanxy.vo) / lengthPlanxy : 0;
+
+    // frequency(Hz) = steps / seconds, i.e. 4000/2 = 2000Hz, inverse value used to replace division with multiplication
+    // TODO :: maybe frequency can be replaced with alarmValue - harder to read, but fixed point math
+    double baseFrequencyA = baseStepsA * maxVMult;
+    double baseFrequencyB = baseStepsB * maxVMult;
+    double baseFrequencyZ = baseStepsZ * maxVMult;
+
+    // ~ 35 microseconds
+
+    motor_settings___t motorSettingsA = {PIN_STATUS__LOW, 1, Motors::motorA.findMicrostepSettings(baseFrequencyA)};
+    motor_settings___t motorSettingsB = {PIN_STATUS__LOW, 1, Motors::motorB.findMicrostepSettings(baseFrequencyB)};
+    motor_settings___t motorSettingsZ = {PIN_STATUS__LOW, 1, Motors::motorZ.findMicrostepSettings(baseFrequencyZ)};
+
+    // ~ 38 microseconds
+
+    if (vecCorexy.a < 0) {
+        motorSettingsA.counterIncrement = -1;
+        motorSettingsA.directVal = PIN_STATUS_HIGH;
+    }
+    if (vecCorexy.b < 0) {
+        motorSettingsB.counterIncrement = -1;
+        motorSettingsB.directVal = PIN_STATUS_HIGH;
+    }
+    if (vecCorexy.z < 0) {
+        motorSettingsZ.counterIncrement = -1;
+        motorSettingsZ.directVal = PIN_STATUS_HIGH;
+    }
+
+    if (dstPlanxy.z == VALUE______RESET) {
+
+        Device::reset(dstPlanxy.x, dstPlanxy.y);
+        Device::homedZ = false;
+
+        // will cause up movement until z-switch is pressed
+        dstPlanxy.x = 0;
+        dstPlanxy.y = 0;
+        dstPlanxy.z = 10;
     }
 
     if (vecCorexy.a != 0.0 || vecCorexy.b != 0.0 || vecCorexy.z != 0.0) {
 
-        // TODO :: much of the stuff below could be moved to the device block too
-        // TODO :: check if vecCorexy inconsistency is a thing
-        // TODO :: check if there are memory concerns
-
-        uint32_t stepsA = abs(vecCorexy.a) * dstDevice.settingsA.settingsMicro.micrMlt;
-        uint32_t stepsB = abs(vecCorexy.b) * dstDevice.settingsB.settingsMicro.micrMlt;
-        uint32_t stepsZ = abs(vecCorexy.z) * dstDevice.settingsZ.settingsMicro.micrMlt;
+        uint32_t stepsA = baseStepsA * motorSettingsA.settingsMicro.microMlt;
+        uint32_t stepsB = baseStepsB * motorSettingsB.settingsMicro.microMlt;
+        uint32_t stepsZ = baseStepsZ * motorSettingsZ.settingsMicro.microMlt;
 
         // Serial.print("stepsA: ");
         // Serial.print(String(stepsA));
@@ -150,7 +198,9 @@ bool Device::accept(block_device_____t& dstDevice) {
         // Serial.print(String(stepsZ));
         // Serial.print(", dir: ");
 
-        if (stepsA >= max(stepsB, stepsZ)) {
+        uint32_t maxSteps = max({stepsA, stepsB, stepsZ});
+
+        if (stepsA == maxSteps) {
             Device::motorPrim = &Motors::motorA;
             Device::motorSec1 = &Motors::motorB;
             Device::motorSec2 = &Motors::motorZ;
@@ -158,7 +208,7 @@ bool Device::accept(block_device_____t& dstDevice) {
             Device::dSec1 = stepsB;
             Device::dSec2 = stepsZ;
             // Serial.print("ABZ");
-        } else if (stepsB >= max(stepsA, stepsZ)) {
+        } else if (stepsB == maxSteps) {
             Device::motorPrim = &Motors::motorB;
             Device::motorSec1 = &Motors::motorA;
             Device::motorSec2 = &Motors::motorZ;
@@ -177,10 +227,12 @@ bool Device::accept(block_device_____t& dstDevice) {
         }
         // Serial.println("");
 
+        // ~ 41 microseconds
+
         // helper values for adjusting frequencies later on
-        Device::frqI = Device::dPrim * dstPlanxy.vi / dstDevice.lenPlanxy;
-        Device::frqO = Device::dPrim * dstPlanxy.vo / dstDevice.lenPlanxy;
-        Device::frqA2 = (Device::frqO - Device::frqI) * 2000000.0 / dstDevice.microsTotal;
+        Device::frqI = Device::dPrim * dstPlanxy.vi / lengthPlanxy;
+        Device::frqO = Device::dPrim * dstPlanxy.vo / lengthPlanxy;
+        Device::frqA2 = (Device::frqO - Device::frqI) * 2000000.0 / microsTotal;
         Device::frqII = Device::frqI * Device::frqI;
 
         // more bresenham algorithm values
@@ -188,12 +240,20 @@ bool Device::accept(block_device_____t& dstDevice) {
         Device::eSec1 = 2 * Device::dSec1 - Device::dPrim;
         Device::eSec2 = 2 * Device::dSec2 - Device::dPrim;
 
-        // point the motors in the proper direction
-        Motors::motorA.applySettings(dstDevice.settingsA);
-        Motors::motorB.applySettings(dstDevice.settingsB);
-        Motors::motorZ.applySettings(dstDevice.settingsZ);
+        // ~ 52 microseconds
 
-        Pulse::setFrequency(Device::frqI);
+        // point the motors in the proper direction
+        Motors::motorA.applySettings(motorSettingsA);
+        Motors::motorB.applySettings(motorSettingsB);
+        Motors::motorZ.applySettings(motorSettingsZ);
+
+        // ~ 59 microseconds
+
+        Driver::setFrequency(Device::frqI);
+
+        Device::acceptMicros += (micros() - acceptMicrosA);
+        Device::acceptCount++;
+        // ~ 67 microseconds
 
         return true;
 
