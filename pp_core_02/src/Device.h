@@ -41,32 +41,32 @@ class Device {
     /**
      * length of the current segment in micrometers (µm, thousandths of millimeters)
      */
-    static double lenP__um;
+    static uint64_t lenP__um;
 
     /**
      * duration of the current segment in microseconds
      */
-    uint64_t durP__us;
+    static uint64_t durP__us;
 
     /**
      * entry-frequency of the current block
      */
-    static double frqI;
+    static uint64_t frqI_mHz;
 
     /**
      * exit-frequency of the current block
      */
-    static double frqO;
+    static uint64_t frqO_mHz;
 
     /**
      * frequency-acceleration of the current block doubled
      */
-    static double frqA2;
+    static uint64_t frqA2;
 
     /**
      * entry-frequency of the current block squared
      */
-    static double frqII;
+    static uint64_t frqII;
 
     /**
      * primary counter

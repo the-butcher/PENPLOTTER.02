@@ -12,6 +12,7 @@ const motor_microstep__t MICROSTEP_T__32 = {32, PIN_STATUS_HIGH, PIN_STATUS__LOW
 
 class Motor {
    private:
+    bool supportsMicro;
     gpio_num_t enablePin;
     gpio_num_t stepPin;
     gpio_num_t directPin;
@@ -22,7 +23,7 @@ class Motor {
     int32_t cntrCur;  // current step count in base resolution
     uint8_t micrCur;  // current micro step count with respect to base resolution (if base resolution is 4 and micro resolution is 16, micro count must be in the range 0-16/4 -> 0-4)
 
-    double maxBaseFrequencies[4];
+    int64_t maxBaseFrq_mHz[4];
 
    public:
     motor_settings___t setsCur;
@@ -56,7 +57,7 @@ class Motor {
     /**
      * find the finest possible motor settings for the given base frequency
      */
-    motor_microstep__t findMicrostepSettings(double baseFrequency);
+    motor_microstep__t findMicrostepSettings(uint64_t baseFrequency);
 };
 
 #endif

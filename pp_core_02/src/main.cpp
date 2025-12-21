@@ -29,11 +29,13 @@ void _setup() {
     Motors::begin();
     Driver::begin();
 
-    // block_planxy_f___t blockPlanxy_f = {297.0, 420.0, -8.0, 5.0, 20.0};
-
-    block_planxy_f___t blockPlanxy_f = {0.00, 0.00, -7.00, 19.0, 1.0};
+    block_planxy_f___t blockPlanxy_f = {297.0, 420.0, -8.0, 5.0, 20.0};
     block_planxy_i64_t blockPlanxy_i = Coords::planxyToPlanxy(blockPlanxy_f);
     Device::accept(blockPlanxy_i);
+
+    for (uint8_t p = 0; p < 1000; p++) {
+        Driver::pulse();
+    }
 
     neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // off
 }
@@ -85,17 +87,18 @@ void loop() {
 
     // TODO :: different behaviour when BLE is not connected
 
-    // Serial.print("acceptMicros: ");
-    // Serial.print(Device::acceptCount > 0 ? Device::acceptMicros / Device::acceptCount : 0);
+    Serial.print("acceptMicros: ");
+    Serial.println(Device::acceptCount > 0 ? Device::acceptMicros / Device::acceptCount : 0);
 
-    char outputBuf[128];
-    sprintf(outputBuf, "frqI: %6.2f, lenP__um: %6.2f", Device::frqI, Device::lenP__um);
-    Serial.println(outputBuf);
+    // char outputBuf[128];
+    // sprintf(outputBuf, "frqI: %6.2f, lenP__um: %6.2f", Device::frqI, Device::lenP__um);
+    // Serial.println(outputBuf);
 
-    // for (uint8_t i = 0; i < 10; i++) {
-    Blesrv::writeBuffSize();  // only writes when the current value is not equal to the last written value
-    delay(250);
-    // }
+    for (uint8_t i = 0; i < 10; i++) {
+        Blesrv::writeBuffSize();  // only writes when the current value is not equal to the last written value
+        delay(100);
+    }
+    Blesrv::writePosition();
 
-    // delay(1000);
+    delay(1000);
 }

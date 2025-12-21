@@ -10,7 +10,7 @@ class Driver {
    private:
     static hw_timer_t* timer;
     static uint16_t divider;
-    static uint64_t eventsPerSecond;
+    static uint64_t eventsPer1000Second;
     static uint64_t microsLast;
     static uint64_t microsCurr;
 
@@ -32,7 +32,7 @@ class Driver {
     /**
      * adjust the pulse timer to run at a the given frequency in hz (iterations / second)
      */
-    static void setFrequency(double frequencyHz);
+    static void setFrq_mHz(uint64_t frq_mHz);
 };
 
 #endif

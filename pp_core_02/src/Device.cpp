@@ -1,11 +1,12 @@
 #include "Device.h"
 
-double Device::frqI = 1.0;
-double Device::frqO = 1.0;
-double Device::frqA2 = 0.0;
-double Device::frqII = 1.0;
+uint64_t Device::frqI_mHz = 1L;
+uint64_t Device::frqO_mHz = 1L;
+uint64_t Device::frqA2 = 0L;
+uint64_t Device::frqII = 1L;
 
-double Device::lenP__um = 0.0;
+uint64_t Device::lenP__um = 0L;
+uint64_t Device::durP__us = 0L;
 
 Motor* Device::motorPrim = nullptr;
 Motor* Device::motorSec1 = nullptr;
@@ -22,8 +23,8 @@ bool Device::homedX = false;
 bool Device::homedY = false;
 bool Device::homedZ = false;
 
-uint64_t Device::acceptMicros = 0;
-uint64_t Device::acceptCount = 0;
+uint64_t Device::acceptMicros = 0L;
+uint64_t Device::acceptCount = 0L;
 
 bool Device::begin() {
     return true;
@@ -81,10 +82,14 @@ void Device::pulse() {
                 Device::yield();
             }
         } else {
-            if (Device::frqI != Device::frqO) {
+            if (Device::frqI_mHz != Device::frqO_mHz) {
                 // v²=v0²+2as // https://www.studysmarter.de/schule/physik/mechanik/gleichmaessig-beschleunigte-bewegung/
-                double frequencyC = sqrt(Device::frqA2 * Device::cPrim + Device::frqII);
-                Driver::setFrequency(frequencyC);
+                uint64_t frq___mHz = sqrt(Device::frqA2 * Device::cPrim + Device::frqII);
+#ifdef USE_SERIAL
+                Serial.print("frq___mHz: ");
+                Serial.println(String(frq___mHz));
+#endif
+                Driver::setFrq_mHz(frq___mHz);
             }
         }
 
@@ -125,11 +130,15 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     //     dstPlanxy.vo = MACHINE_HOME_V_Z;
     // }
 
-    // // TODO :: check if this case still occurs and maybe handle in another way
-    // if (dstPlanxy.vi == 0 && dstPlanxy.vo == 0) {
-    //     dstPlanxy.vi = MACHINE_HOME_VXY;
-    //     dstPlanxy.vo = MACHINE_HOME_VXY;
-    // }
+    // TODO :: check if this case still occurs and maybe handle in another way
+    if (dstPlanxy.vi == 0 && dstPlanxy.vo == 0) {
+        dstPlanxy.vi = MACHINE_HOME_VXY;
+        dstPlanxy.vo = MACHINE_HOME_VXY;
+    } else if (dstPlanxy.vi == 0) {
+        dstPlanxy.vi = MACHINE_HOME_VXY;
+    } else if (dstPlanxy.vo == 0) {
+        dstPlanxy.vo = MACHINE_HOME_VXY;
+    }
 
     // src coordinates
     coord_corexy_____t srcCorexy = Motors::getCurCorexy();             // where the machine is in terms of motor counters
@@ -159,29 +168,29 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     Serial.println(String(vecPlanxy.z));
 #endif
 
-    // ~ 19 microseconds
+    // ~ 9 microseconds
 
     // planar distance to reach destination
     Device::lenP__um = Coords::toLength(vecPlanxy);  // sqrt(vecPlanxy.x * vecPlanxy.x + vecPlanxy.y * vecPlanxy.y + vecPlanxy.z * vecPlanxy.z);  // Coords::toLength(vecPlanxy);
 
 #ifdef USE_SERIAL
     // lengthPlanxy: 514463
-    Serial.print("lengthPlanxy: ");
-    Serial.println(String(Device::lenP));
+    Serial.print("lenP__um: ");
+    Serial.println(String(Device::lenP__um));
 #endif
 
-    // ~ 26 microseconds
+    // ~ 14 microseconds
 
     // duration to reach destination (each block needs to have linear acceleration or constant speed)
-    uint64_t durP__us = Device::lenP__um * TWO_SECONDS____us / (dstPlanxy.vi + dstPlanxy.vo);
+    Device::durP__us = Device::lenP__um * TWO_SECONDS____us / (dstPlanxy.vi + dstPlanxy.vo);
 
 #ifdef USE_SERIAL
     // microsTotal: 41157040
-    Serial.print("microsTotal: ");
-    Serial.println(String(microsTotal));
+    Serial.print("durP__us: ");
+    Serial.println(String(Device::durP__us));
 #endif
 
-    // ~ 29 microseconds
+    // ~ 15 microseconds
 
     uint32_t baseStepsA = abs(vecCorexy.a);
     uint32_t baseStepsB = abs(vecCorexy.b);
@@ -200,31 +209,47 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
 #endif
 
     // seconds = length(mm) / speed(mm/s), inverse value used here
-    double maxVMult = Device::lenP__um != 0.0 ? max(dstPlanxy.vi, dstPlanxy.vo) * 1.0 / Device::lenP__um : 0;
-
-    // frequency(Hz) = steps / seconds, i.e. 4000/2 = 2000Hz, inverse value used to replace division with multiplication
-    // TODO :: maybe frequency can be replaced with alarmValue - harder to read, but fixed point math
-    double baseFrequencyA = baseStepsA * maxVMult;
-    double baseFrequencyB = baseStepsB * maxVMult;
-    double baseFrequencyZ = baseStepsZ * maxVMult;
+    uint64_t maxVMult2 = Device::lenP__um > 0 ? max(dstPlanxy.vi, dstPlanxy.vo) * 1000000L / Device::lenP__um : 0;
 
 #ifdef USE_SERIAL
-    // baseFrequencyA: 191.27
-    // baseFrequencyB: 1114.95
-    // baseFrequencyZ: 18.66
-    Serial.print("baseFrequencyA: ");
-    Serial.println(String(baseFrequencyA));
-    Serial.print("baseFrequencyB: ");
-    Serial.println(String(baseFrequencyB));
-    Serial.print("baseFrequencyZ: ");
-    Serial.println(String(baseFrequencyZ));
+    // maxVMult: 0.0389
+    // Serial.print("maxVMult: ");
+    // Serial.println(String(maxVMult, 4));
+    Serial.print("maxVMult2: ");
+    Serial.println(String(maxVMult2));
 #endif
 
-    // ~ 35 microseconds
+    // frequency(Hz) = steps / seconds, i.e. 4000/2 = 2000Hz, inverse value used to replace division with multiplication
+    uint64_t frqA_mHz = baseStepsA * maxVMult2 / 1000L;
+    uint64_t frqB_mHz = baseStepsB * maxVMult2 / 1000L;
+    uint64_t frqZ_mHz = baseStepsZ * maxVMult2 / 1000L;
 
-    motor_settings___t motorSettingsA = {PIN_STATUS__LOW, 1, Motors::motorA.findMicrostepSettings(baseFrequencyA)};
-    motor_settings___t motorSettingsB = {PIN_STATUS__LOW, 1, Motors::motorB.findMicrostepSettings(baseFrequencyB)};
-    motor_settings___t motorSettingsZ = {PIN_STATUS__LOW, 1, Motors::motorZ.findMicrostepSettings(baseFrequencyZ)};
+#ifdef USE_SERIAL
+    // frqA__Hz: 191.27
+    // frqB__Hz: 1114.95
+    // frqZ__Hz: 18.66
+    // Serial.print("frqA__Hz: ");
+    // Serial.println(String(frqA__Hz));
+    // Serial.print("frqB__Hz: ");
+    // Serial.println(String(frqB__Hz));
+    // Serial.print("frqZ__Hz: ");
+    // Serial.println(String(frqZ__Hz));
+    // frqA_mHz: 191265
+    // frqB_mHz: 1114935
+    // frqZ_mHz: 18660
+    Serial.print("frqA_mHz: ");
+    Serial.println(String(frqA_mHz));
+    Serial.print("frqB_mHz: ");
+    Serial.println(String(frqB_mHz));
+    Serial.print("frqZ_mHz: ");
+    Serial.println(String(frqZ_mHz));
+#endif
+
+    // ~ 16 microseconds
+
+    motor_settings___t motorSettingsA = {PIN_STATUS__LOW, 1, Motors::motorA.findMicrostepSettings(frqA_mHz)};
+    motor_settings___t motorSettingsB = {PIN_STATUS__LOW, 1, Motors::motorB.findMicrostepSettings(frqB_mHz)};
+    motor_settings___t motorSettingsZ = {PIN_STATUS__LOW, 1, Motors::motorZ.findMicrostepSettings(frqZ_mHz)};
 
 #ifdef USE_SERIAL
     // motorSettingsA x8
@@ -238,7 +263,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     Serial.println(String(motorSettingsZ.settingsMicro.microMlt));
 #endif
 
-    // ~ 38 microseconds
+    // ~ 20 microseconds
 
     if (vecCorexy.a < 0) {
         motorSettingsA.counterIncrement = -1;
@@ -283,7 +308,6 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
 #endif
 
         uint32_t maxSteps = max({stepsA, stepsB, stepsZ});
-
         if (stepsA == maxSteps) {
             Device::motorPrim = &Motors::motorA;
             Device::motorSec1 = &Motors::motorB;
@@ -311,21 +335,25 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         }
         // Serial.println("");
 
-        // ~ 41 microseconds
+        // ~ 23 microseconds
 
         // helper values for adjusting frequencies later on
-        Device::frqI = Device::dPrim * dstPlanxy.vi * 1.0 / Device::lenP__um;
-        Device::frqO = Device::dPrim * dstPlanxy.vo * 1.0 / Device::lenP__um;
-        Device::frqA2 = (Device::frqO - Device::frqI) * 2000000.0 / durP__us;
-        Device::frqII = Device::frqI * Device::frqI;
+        Device::frqI_mHz = Device::dPrim * dstPlanxy.vi * 1000L / Device::lenP__um;
+        Device::frqO_mHz = Device::dPrim * dstPlanxy.vo * 1000L / Device::lenP__um;
+        Device::frqA2 = (Device::frqO_mHz - Device::frqI_mHz) * 2000000L / Device::durP__us;
+        Device::frqII = Device::frqI_mHz * Device::frqI_mHz;
 
 #ifdef USE_SERIAL
-        // frqI: 1114.00
-        // frqO: 4459.00
-        Serial.print("frqI: ");
-        Serial.println(String(frqI));
-        Serial.print("frqO: ");
-        Serial.println(String(frqO));
+        // frqI_mHz: 1114948
+        // frqO_mHz: 4459795
+        Serial.print("frqI_mHz: ");
+        Serial.println(String(Device::frqI_mHz));
+        Serial.print("frqO_mHz: ");
+        Serial.println(String(Device::frqO_mHz));
+        Serial.print("frqA2: ");
+        Serial.println(String(Device::frqA2));
+        Serial.print("frqII: ");
+        Serial.println(String(Device::frqII));
 #endif
 
         // more bresenham algorithm values
@@ -333,20 +361,20 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         Device::eSec1 = 2 * Device::dSec1 - Device::dPrim;
         Device::eSec2 = 2 * Device::dSec2 - Device::dPrim;
 
-        // ~ 52 microseconds
+        // ~ 26 microseconds
 
         // point the motors in the proper direction
         Motors::motorA.applySettings(motorSettingsA);
         Motors::motorB.applySettings(motorSettingsB);
         Motors::motorZ.applySettings(motorSettingsZ);
 
-        // ~ 59 microseconds
+        // ~ 33 microseconds
 
-        Driver::setFrequency(Device::frqI);
+        Driver::setFrq_mHz(Device::frqI_mHz);
 
         Device::acceptMicros += (micros() - acceptMicrosA);
         Device::acceptCount++;
-        // ~ 67 microseconds
+        // ~ 36 microseconds
 
         return true;
 

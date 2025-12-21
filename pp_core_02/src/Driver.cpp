@@ -2,7 +2,7 @@
 
 hw_timer_t* Driver::timer;
 uint16_t Driver::divider = 8;
-uint64_t Driver::eventsPerSecond = ONE_SECOND_____us * 80 / Driver::divider;  // 10000000
+uint64_t Driver::eventsPer1000Second = ONE_SECOND_____us * 1000L * 80L / Driver::divider;  // 10000000
 uint64_t Driver::microsLast = 0;
 uint64_t Driver::microsCurr = 0;
 uint64_t Driver::microsPulse = 0;
@@ -13,10 +13,12 @@ uint64_t Driver::pulseCount = 0;
 
 bool Driver::begin() {
 
+#ifndef USE_SERIAL
     Driver::timer = timerBegin(0, Driver::divider, true);  // 8 means 10000000 events per second (10MHz)
     timerAttachInterrupt(Driver::timer, &Driver::pulse, true);
-    Driver::setFrequency(1);
+    Driver::setFrq_mHz(1000L);
     timerAlarmEnable(Driver::timer);
+#endif
 
     return true;
 }
@@ -36,18 +38,21 @@ void Driver::pulse() {
 }
 
 void Driver::yield() {
-    Driver::setFrequency(1);
+    Driver::setFrq_mHz(1000L);
 }
 
-void Driver::setFrequency(double frequencyHz) {
+void Driver::setFrq_mHz(uint64_t frq_mHz) {
 
-    // Serial.print("frequencyHz: ");
-    // Serial.println(frequencyHz);
+    uint64_t alarmValue = Driver::eventsPer1000Second / frq_mHz;
 
-    uint64_t alarmValue = round(Driver::eventsPerSecond / frequencyHz);
+#ifdef USE_SERIAL
+    Serial.print("frq_mHz: ");
+    Serial.println(frq_mHz);
+    Serial.print("alarmValue: ");
+    Serial.println(alarmValue);
+#endif
 
-    // Serial.print("alarmValue: ");
-    // Serial.println(alarmValue);
-
+#ifndef USE_SERIAL
     timerAlarmWrite(Driver::timer, alarmValue, true);
+#endif
 }

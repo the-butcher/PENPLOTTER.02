@@ -7,8 +7,6 @@
 #define MACHINE_DIM____X 297
 #define MACHINE_DIM____Y 420
 #define MACHINE_DIM____Z -8
-#define MACHINE_HOME_VXY 20
-#define MACHINE_HOME_V_Z 5
 
 #define VALUE______RESET 9999.0
 
@@ -26,17 +24,19 @@
 #define COMMAND_BUFF_VALS_SIZE 24
 #define BTLE_DEVICE_NAME "PEN_PLOTTER_02"
 
-#define MAX_FREQUENCY 6000.0
-
 #ifndef Define_h
 #define Define_h
 
 #include <Arduino.h>
 
+// const double MAX_FREQUENCY__Hz = 6000.0;
+const int64_t MAX_FREQUENCY_mHz = 6000000;  // 6000hZ * 1000 => mHz
 const int64_t ONE_ROTATION___um = 40000;
 const int64_t ONE_ROTATION_Z_um = 60000;
 const int64_t ONE_SECOND_____us = 1000000;
 const int64_t TWO_SECONDS____us = 2000000;
+const int64_t MACHINE_HOME_VXY = 20000;
+const int64_t MACHINE_HOME_V_Z = 5000;
 
 // /**
 //  * internal representation of a planar coordinate
