@@ -1,17 +1,4 @@
-// #define MOTOR_A_STEP_PIN 2
-// #define MOTOR_A_DRCT_PIN 5
-// #define MOTOR_A_MICR_PIN 19
-
-// #define MOTOR_B_STEP_PIN 3
-// #define MOTOR_B_DRCT_PIN 6
-// #define MOTOR_B_MICR_PIN 18
-
-// #define MOTOR_Z_STEP_PIN 4
-// #define MOTOR_Z_DRCT_PIN 7
-// #define MOTOR_Z_MICR_PIN -1
-
-#define MOTOR___STEPS_MM 40
-#define MOTOR_Z_STEPS_MM 60
+// #define USE_SERIAL
 
 #define LIMIT_X_STOP_PIN 9
 #define LIMIT_Y_STOP_PIN 10
@@ -39,7 +26,6 @@
 #define COMMAND_BUFF_VALS_SIZE 24
 #define BTLE_DEVICE_NAME "PEN_PLOTTER_02"
 
-#define MICROSECONDS_PER_SECOND 1000000
 #define MAX_FREQUENCY 6000.0
 
 #ifndef Define_h
@@ -47,16 +33,27 @@
 
 #include <Arduino.h>
 
-/**
- * internal representation of a planar coordinate
- * double used to avoid float problems in interrupts
- * https://forum.arduino.cc/t/how-to-do-simple-float-calculations-in-a-interrupt-handler-on-nodemcu-esp32/915384
- */
+const int64_t ONE_ROTATION___um = 40000;
+const int64_t ONE_ROTATION_Z_um = 60000;
+const int64_t ONE_SECOND_____us = 1000000;
+const int64_t TWO_SECONDS____us = 2000000;
+
+// /**
+//  * internal representation of a planar coordinate
+//  * double used to avoid float problems in interrupts
+//  * https://forum.arduino.cc/t/how-to-do-simple-float-calculations-in-a-interrupt-handler-on-nodemcu-esp32/915384
+//  */
+// typedef struct {
+//     double x;          // x coord with respect to x home (mm)
+//     double y;          // y coord with respect to y home (mm)
+//     double z;          // z coord with respect to z home (mm)
+// } coord_planxy_d___t;  // 24 bytes
+
 typedef struct {
-    double x;          // x coord with respect to x home (mm)
-    double y;          // y coord with respect to y home (mm)
-    double z;          // z coord with respect to z home (mm)
-} coord_planxy_d___t;  // 24 bytes
+    int64_t x;         // x coord with respect to x home (mm)
+    int64_t y;         // y coord with respect to y home (mm)
+    int64_t z;         // z coord with respect to z home (mm)
+} coord_planxy_i64_t;  // 24 bytes
 
 /**
  * communication representation of a planar coordinate
@@ -68,18 +65,26 @@ typedef struct {
     float z;           // z coord with respect to z home (mm)
 } coord_planxy_f___t;  // 12 bytes
 
-/**
- * internal representation of a planar distance with entry and exit speeds
- * double used to avoid float problems in interrupts
- * https://forum.arduino.cc/t/how-to-do-simple-float-calculations-in-a-interrupt-handler-on-nodemcu-esp32/915384
- */
+// /**
+//  * internal representation of a planar distance with entry and exit speeds
+//  * double used to avoid float problems in interrupts
+//  * https://forum.arduino.cc/t/how-to-do-simple-float-calculations-in-a-interrupt-handler-on-nodemcu-esp32/915384
+//  */
+// typedef struct {
+//     double x;          // exit x coord with respect to x home (mm)
+//     double y;          // exit y coord with respect to y home (mm)
+//     double z;          // exit z coord with respect to z home (mm)
+//     double vi;         // entry speed (mm/s)
+//     double vo;         // exit speed (mm/s)
+// } block_planxy_d___t;  // 40 bytes
+
 typedef struct {
-    double x;          // exit x coord with respect to x home (mm)
-    double y;          // exit y coord with respect to y home (mm)
-    double z;          // exit z coord with respect to z home (mm)
-    double vi;         // entry speed (mm/s)
-    double vo;         // exit speed (mm/s)
-} block_planxy_d___t;  // 40 bytes
+    int64_t x;         // exit x coord with respect to x home (mm)
+    int64_t y;         // exit y coord with respect to y home (mm)
+    int64_t z;         // exit z coord with respect to z home (mm)
+    int64_t vi;        // entry speed (mm/s)
+    int64_t vo;        // exit speed (mm/s)
+} block_planxy_i64_t;  // 40 bytes
 
 /**
  * internal representation of a planar distance with entry and exit speeds
@@ -94,9 +99,9 @@ typedef struct {
 } block_planxy_f___t;  // 20 bytes
 
 typedef struct {
-    int32_t a;         // left motor coord (microstep settings as of motor-A constants)
-    int32_t b;         // right motor coord (microstep settings as of motor-B constants)
-    int32_t z;         // pen motor coord (microstep settings as of motor-Z constants)
+    int64_t a;         // left motor coord (microstep settings as of motor-A constants)
+    int64_t b;         // right motor coord (microstep settings as of motor-B constants)
+    int64_t z;         // pen motor coord (microstep settings as of motor-Z constants)
 } coord_corexy_____t;  // 12 bytes
 
 typedef enum {

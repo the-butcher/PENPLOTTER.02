@@ -45,10 +45,12 @@ class BuffValueCallbacks : public BLECharacteristicCallbacks {
         // Serial.println(xPortGetCoreID());
 
         uint8_t* newValue = (uint8_t*)pCharacteristic->getData();
-        block_planxy_f___t blockPlanxy;
+        block_planxy_f___t blockPlanxy_f;
+        block_planxy_i64_t blockPlanxy_i;
         for (uint16_t newValueIndex = 0; newValueIndex < COMMAND_BUFF_VALS_SIZE * sizeof(block_planxy_f___t); newValueIndex += sizeof(block_planxy_f___t)) {
-            deserializeData(newValue, newValueIndex, blockPlanxy);
-            Coords::addBlock({blockPlanxy.x, blockPlanxy.y, blockPlanxy.z, blockPlanxy.vi, blockPlanxy.vo});
+            deserializeData(newValue, newValueIndex, blockPlanxy_f);
+            blockPlanxy_i = Coords::planxyToPlanxy(blockPlanxy_f);
+            Coords::addBlock(blockPlanxy_i);
         }
         Blesrv::writeBuffSize();  // update buffer size after having read new blocks
     }
@@ -126,8 +128,8 @@ bool Blesrv::writeBuffSize() {
 bool Blesrv::writePosition() {
     if (Blesrv::isConnected()) {
         coord_corexy_____t curCorexy = Motors::getCurCorexy();
-        coord_planxy_d___t curPlan_d = Coords::corexyToPlanxy(curCorexy);
-        coord_planxy_f___t curPlan_f = {(float)curPlan_d.x, (float)curPlan_d.y, (float)curPlan_d.z};
+        coord_planxy_i64_t curPlan_i = Coords::corexyToPlanxy(curCorexy);
+        coord_planxy_f___t curPlan_f = Coords::planxyToPlanxy(curPlan_i);
         uint8_t outValue[sizeof(curPlan_f)];
         serializeData(curPlan_f, outValue);
         Blesrv::pPositionCharacteristic->setValue(outValue, sizeof(curPlan_f));

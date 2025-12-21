@@ -22,10 +22,10 @@ class Device {
     /**
      * set the A and B counters to reflect the given planar coordinate
      */
-    static void reset(double x, double y);
+    static void reset(int64_t x, int64_t y);
 
     // static bool accept(block_device_____t& dstDevice);  // accept a new destination coordinate and immediately start moving to, or drawing to that coordinate
-    static bool accept(block_planxy_d___t dstPlanxy);  // accept a new destination coordinate and immediately start moving to, or drawing to that coordinate
+    static bool accept(block_planxy_i64_t dstPlanxy);  // accept a new destination coordinate and immediately start moving to, or drawing to that coordinate
 
     static void pulse();
 
@@ -37,6 +37,16 @@ class Device {
     static bool homedX;
     static bool homedY;
     static bool homedZ;
+
+    /**
+     * length of the current segment in micrometers (µm, thousandths of millimeters)
+     */
+    static double lenP__um;
+
+    /**
+     * duration of the current segment in microseconds
+     */
+    uint64_t durP__us;
 
     /**
      * entry-frequency of the current block

@@ -16,6 +16,28 @@ void driverBegin(void* pvParameters) {
     vTaskDelete(NULL);
 }
 
+void _setup() {
+
+    neopixelWrite(RGB_BUILTIN, 1, 1, 0);  // yellow
+
+    Serial.begin(115200);
+    delay(5000);
+    Serial.print("PP: setup - 1, ESP.getFreeHeap(): ");
+    Serial.println(ESP.getFreeHeap());
+
+    Coords::begin();
+    Motors::begin();
+    Driver::begin();
+
+    // block_planxy_f___t blockPlanxy_f = {297.0, 420.0, -8.0, 5.0, 20.0};
+
+    block_planxy_f___t blockPlanxy_f = {0.00, 0.00, -7.00, 19.0, 1.0};
+    block_planxy_i64_t blockPlanxy_i = Coords::planxyToPlanxy(blockPlanxy_f);
+    Device::accept(blockPlanxy_i);
+
+    neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // off
+}
+
 void setup() {
 
     neopixelWrite(RGB_BUILTIN, 1, 1, 0);  // yellow
@@ -63,29 +85,17 @@ void loop() {
 
     // TODO :: different behaviour when BLE is not connected
 
-    // Serial.print("microsPulse: ");
-    // Serial.print(Driver::microsPulse);
-    // if (Driver::microsProcs > microsProcsMax) {
-    // microsProcsMax = Driver::microsProcs;
-    Serial.print("acceptMicros: ");
-    Serial.println(Device::acceptCount > 0 ? Device::acceptMicros / Device::acceptCount : 0);
-    // Serial.print(", microsProcs: ");
-    // Serial.print(microsProcsMax);
-    // Serial.print(", frequencyProcs: ");
-    // Serial.println(Driver::frequencyProcs);
+    // Serial.print("acceptMicros: ");
+    // Serial.print(Device::acceptCount > 0 ? Device::acceptMicros / Device::acceptCount : 0);
+
+    char outputBuf[128];
+    sprintf(outputBuf, "frqI: %6.2f, lenP__um: %6.2f", Device::frqI, Device::lenP__um);
+    Serial.println(outputBuf);
+
+    // for (uint8_t i = 0; i < 10; i++) {
+    Blesrv::writeBuffSize();  // only writes when the current value is not equal to the last written value
+    delay(250);
     // }
 
-    // Serial.print(", micrMlt-b: ");
-    // Serial.println(Motors::motorB.setsCur.settingsMicro.micrMlt);
-
-    // char coordBuffer[64];
-    // sprintf(coordBuffer, "a: %6d b: %6d z: %6d", Motors::motorA.getCntrCur(), Motors::motorB.getCntrCur(), Motors::motorZ.getCntrCur());
-    // Serial.println(coordBuffer);
-
-    // Serial.print(", pulseCount (m): ");
-    // Serial.println(pulseCount);
-    for (uint8_t i = 0; i < 10; i++) {
-        Blesrv::writeBuffSize();  // only writes when the current value is not equal to the last written value
-        delay(100);
-    }
+    // delay(1000);
 }
