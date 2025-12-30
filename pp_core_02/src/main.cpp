@@ -54,17 +54,17 @@ void setup() {
     uint64_t connectCounter = 0;
     while (!Blesrv::isConnected()) {
         if (connectCounter % 10 == 0) {
-            neopixelWrite(RGB_BUILTIN, 0, 0, 1);  // blue
-            delay(100);
+            neopixelWrite(RGB_BUILTIN, 0, 0, 2);  // blue
+            delay(200);
             neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // off
-            delay(300);
+            delay(200);
         } else {
             delay(400);
         }
         connectCounter++;
     }
     Serial.println("PP: setup - ... bluetooth connection established");
-    neopixelWrite(RGB_BUILTIN, 0, 0, 1);  // blue
+    neopixelWrite(RGB_BUILTIN, 0, 0, 2);  // blue
 
     Motors::begin();
     Coords::begin();  // adds machine homing coordinates
@@ -94,11 +94,11 @@ void loop() {
     // sprintf(outputBuf, "frqI: %6.2f, lenP__um: %6.2f", Device::frqI, Device::lenP__um);
     // Serial.println(outputBuf);
 
+    Blesrv::writePosition();
     for (uint8_t i = 0; i < 10; i++) {
         Blesrv::writeBuffSize();  // only writes when the current value is not equal to the last written value
         delay(100);
     }
-    Blesrv::writePosition();
 
-    delay(1000);
+    // delay(1000);
 }
