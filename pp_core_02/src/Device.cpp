@@ -1,12 +1,12 @@
 #include "Device.h"
 
-uint64_t Device::frqI_mHz = 1L;
-uint64_t Device::frqO_mHz = 1L;
-uint64_t Device::frqA2 = 0L;
-uint64_t Device::frqII = 1L;
+int64_t Device::frqI_mHz = 1L;
+int64_t Device::frqO_mHz = 1L;
+int64_t Device::frqA2 = 0L;
+int64_t Device::frqII = 1L;
 
 uint64_t Device::lenP__um = 0L;
-uint64_t Device::durP__us = 0L;
+int64_t Device::durP__us = 0L;
 
 Motor* Device::motorPrim = nullptr;
 Motor* Device::motorSec1 = nullptr;
@@ -84,12 +84,8 @@ void Device::pulse() {
         } else {
             if (Device::frqI_mHz != Device::frqO_mHz) {
                 // v²=v0²+2as // https://www.studysmarter.de/schule/physik/mechanik/gleichmaessig-beschleunigte-bewegung/
-                uint64_t frq___mHz = sqrt(Device::frqA2 * Device::cPrim + Device::frqII);
-#ifdef USE_SERIAL
-                Serial.print("frq___mHz: ");
-                Serial.println(String(frq___mHz));
-#endif
-                Driver::setFrq_mHz(frq___mHz);
+                uint64_t frq___mHz = sqrt(Device::frqA2 * Device::cPrim * 1000L + Device::frqII);
+                Driver::setFrq___mHz(frq___mHz);
             }
         }
 
@@ -237,11 +233,11 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     // frqA_mHz: 191265
     // frqB_mHz: 1114935
     // frqZ_mHz: 18660
-    Serial.print("frqA_mHz: ");
+    Serial.print("frqA__mHz: ");
     Serial.println(String(frqA_mHz));
-    Serial.print("frqB_mHz: ");
+    Serial.print("frqB__mHz: ");
     Serial.println(String(frqB_mHz));
-    Serial.print("frqZ_mHz: ");
+    Serial.print("frqZ__mHz: ");
     Serial.println(String(frqZ_mHz));
 #endif
 
@@ -354,6 +350,8 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         Serial.println(String(Device::frqA2));
         Serial.print("frqII: ");
         Serial.println(String(Device::frqII));
+        Serial.print("dPrim: ");
+        Serial.println(String(Device::dPrim));
 #endif
 
         // more bresenham algorithm values
@@ -370,7 +368,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
 
         // ~ 33 microseconds
 
-        Driver::setFrq_mHz(Device::frqI_mHz);
+        Driver::setFrq___mHz(Device::frqI_mHz);
 
         Device::acceptMicros += (micros() - acceptMicrosA);
         Device::acceptCount++;

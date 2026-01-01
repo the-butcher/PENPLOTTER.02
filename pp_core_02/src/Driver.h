@@ -32,7 +32,7 @@ class Driver {
     /**
      * adjust the pulse timer to run at a the given frequency in hz (iterations / second)
      */
-    static void setFrq_mHz(uint64_t frq_mHz);
+    static void setFrq___mHz(uint64_t frq___mHz);
 };
 
 #endif

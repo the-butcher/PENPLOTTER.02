@@ -16,7 +16,7 @@ bool Driver::begin() {
 #ifndef USE_SERIAL
     Driver::timer = timerBegin(0, Driver::divider, true);  // 8 means 10000000 events per second (10MHz)
     timerAttachInterrupt(Driver::timer, &Driver::pulse, true);
-    Driver::setFrq_mHz(1000L);
+    Driver::setFrq___mHz(1000L);
     timerAlarmEnable(Driver::timer);
 #endif
 
@@ -38,16 +38,16 @@ void Driver::pulse() {
 }
 
 void Driver::yield() {
-    Driver::setFrq_mHz(1000L);
+    Driver::setFrq___mHz(1000L);
 }
 
-void Driver::setFrq_mHz(uint64_t frq_mHz) {
+void Driver::setFrq___mHz(uint64_t frq___mHz) {
 
-    uint64_t alarmValue = Driver::eventsPer1000Second / frq_mHz;
+    uint64_t alarmValue = Driver::eventsPer1000Second / frq___mHz;
 
 #ifdef USE_SERIAL
-    Serial.print("frq_mHz: ");
-    Serial.println(frq_mHz);
+    Serial.print("frq___mHz: ");
+    Serial.println(frq___mHz);
     Serial.print("alarmValue: ");
     Serial.println(alarmValue);
 #endif

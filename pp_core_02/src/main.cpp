@@ -81,9 +81,26 @@ void setup() {
 
     Serial.print("PP: setup - 3, ESP.getFreeHeap(): ");
     Serial.println(ESP.getFreeHeap());
+
+    // block_planxy_f___t blockPlanxy_f = {100.0, -100.0, -8.0, 30.0, 5.0};
+    // block_planxy_i64_t blockPlanxy_i = Coords::planxyToPlanxy(blockPlanxy_f);
+    // Coords::addBlock(blockPlanxy_i);
+    // for (uint8_t p = 0; p < 100; p++) {
+    //     Driver::pulse();
+    // }
 }
 
 void loop() {
+
+    // if (Motors::motorA.setsCur.settingsMicro.microMlt == 8) {         // 32
+    //     neopixelWrite(RGB_BUILTIN, 0, 0, 4);                          // blue
+    // } else if (Motors::motorA.setsCur.settingsMicro.microMlt == 4) {  // 16
+    //     neopixelWrite(RGB_BUILTIN, 0, 4, 0);                          // green
+    // } else if (Motors::motorA.setsCur.settingsMicro.microMlt == 2) {  // 8
+    //     neopixelWrite(RGB_BUILTIN, 2, 2, 0);                          // yellow
+    // } else if (Motors::motorA.setsCur.settingsMicro.microMlt == 1) {  // 4
+    //     neopixelWrite(RGB_BUILTIN, 4, 0, 0);                          // red
+    // }
 
     // TODO :: different behaviour when BLE is not connected
 
@@ -95,10 +112,10 @@ void loop() {
     // Serial.println(outputBuf);
 
     Blesrv::writePosition();
-    for (uint8_t i = 0; i < 10; i++) {
+    for (uint8_t i = 0; i < 5; i++) {
         Blesrv::writeBuffSize();  // only writes when the current value is not equal to the last written value
         delay(100);
     }
 
-    // delay(1000);
+    // delay(400);
 }

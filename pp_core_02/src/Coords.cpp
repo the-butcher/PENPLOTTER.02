@@ -23,6 +23,8 @@ bool Coords::begin() {
     //     Coords::addBlock({sin(r) * 100, cos(r) * 100 - 100, 0, 30, 30});
     // }
 
+
+
     return true;
 }
 

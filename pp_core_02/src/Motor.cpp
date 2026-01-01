@@ -1,7 +1,7 @@
 #include "Motor.h"
 
-void logSettingsMicro(uint8_t index, motor_microstep__t settingsMicro) {
-    Serial.print(String(index));
+void logSettingsMicro(char id, motor_microstep__t settingsMicro) {
+    Serial.print(id);
     Serial.print(", x");
     Serial.print(String(settingsMicro.microMlt));
     Serial.print(", [");
@@ -81,6 +81,9 @@ void Motor::applySettings(motor_settings___t setsCur) {
         digitalWrite(this->microPin0, this->setsCur.settingsMicro.microVal0);
         digitalWrite(this->microPin1, this->setsCur.settingsMicro.microVal1);
         digitalWrite(this->microPin2, this->setsCur.settingsMicro.microVal2);
+#ifdef USE_SERIAL
+        logSettingsMicro(this->id, this->setsCur.settingsMicro);
+#endif
     }
 }
 
@@ -108,7 +111,7 @@ bool Motor::begin() {
 
 void Motor::pulse() {
     digitalWrite(this->stepPin, HIGH);
-    delayMicroseconds(1);
+    delayMicroseconds(2);
     digitalWrite(this->stepPin, LOW);
     this->micrCur++;
     if (this->micrCur >= this->setsCur.settingsMicro.microMlt) {
