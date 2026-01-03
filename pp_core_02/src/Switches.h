@@ -3,16 +3,21 @@
 
 #include <Arduino.h>
 #include <Define.h>
-#include <Switch.h>
+
+#include "Switch.h"
 
 class Switches {
    private:
    public:
-    static Switch switchX;
-    static Switch switchY;
-    static Switch switchZ;
+    static Switch limitX;
+    static Switch limitY;
+    static Switch limitZ;
     static bool begin();
-    static bool isAnySwitchPressed();
+    static void handleChangeX();
+    static void handleChangeY();
+    static void handleChangeZ();
+    static bool isAnyLimitPressed();
+    static void updateNeopixel();
 };
 
 #endif

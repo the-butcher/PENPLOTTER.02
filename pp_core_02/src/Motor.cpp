@@ -102,10 +102,19 @@ bool Motor::begin() {
     pinMode(this->microPin2, OUTPUT);
 
     // enable the motor (for motors not having dynamic microswitching, this pulls the micropins high so any jumpers set will be in effect)
-    digitalWrite(this->enablePin, PIN_STATUS_HIGH);
+    digitalWrite(this->enablePin, PIN_STATUS__LOW);
+    digitalWrite(this->stepPin, PIN_STATUS__LOW);
+    digitalWrite(this->directPin, PIN_STATUS__LOW);
 
     this->applySettings({PIN_STATUS__LOW, 1, this->settingsMicro[0]});  // apply  initial settings to have all pins in a valid state
 
+    return true;
+}
+
+bool Motor::enable() {
+
+    // enable the motor (for motors not having dynamic microswitching, this pulls the micropins high so any jumpers set will be in effect)
+    digitalWrite(this->enablePin, PIN_STATUS_HIGH);
     return true;
 }
 

@@ -13,10 +13,12 @@ class Motors {
     static Motor motorA;
     static Motor motorB;
     static Motor motorZ;
+    static Motor motorR;
     /**
      * begin the static Motors instance
      */
     static bool begin();
+    static bool enable();
     /**
      * get current corexy coordinate from motor counters
      */

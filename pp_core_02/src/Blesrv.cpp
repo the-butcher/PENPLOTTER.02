@@ -24,10 +24,10 @@ void deserializeData(const uint8_t* inputBytes, uint16_t offset, T& outputStruct
 class BlesrvCallbacks : public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
         // do nothing
-        // Serial.println("something connected, count: " + pServer->getConnectedCount());
+        Serial.println("something connected, count: " + pServer->getConnectedCount());
     };
     void onDisconnect(BLEServer* pServer) {
-        // Serial.println("something disconnected, count: " + pServer->getConnectedCount());
+        Serial.println("something disconnected, count: " + pServer->getConnectedCount());
         // TODO :: clear all coordinates
         // BLEDevice::startAdvertising();
         esp_restart();
@@ -56,11 +56,17 @@ class BuffValueCallbacks : public BLECharacteristicCallbacks {
     }
 };
 
+void Blesrv::setLedStatus(blue_led_status___e status) {
+    digitalWrite(PIN_LED_BLUE, status);  // LOW is ON
+}
+
 bool Blesrv::isConnected() {
     return Blesrv::pServer->getConnectedCount() > 0;
 }
 
 bool Blesrv::begin() {
+
+    pinMode(PIN_LED_BLUE, OUTPUT);
 
     BLEDevice::init(BTLE_DEVICE_NAME);
 

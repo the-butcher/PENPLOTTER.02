@@ -1,15 +1,21 @@
 #include "Switch.h"
 
-Switch::Switch(char id, uint8_t stopPin) {
+Switch::Switch(char id, uint8_t gpin) {
     this->id = id;
-    this->stopPin = stopPin;
+    this->gpin = gpin;
+    this->ipin = digitalPinToInterrupt(gpin);
+    this->pressed = false;
+}
+
+void Switch::handleChange() {
+    this->pressed = digitalRead(this->gpin);
 }
 
 bool Switch::begin() {
-    pinMode(this->stopPin, INPUT_PULLUP);
+    pinMode(this->gpin, INPUT_PULLUP);
     return true;
 }
 
 bool Switch::isPressed() {
-    return digitalRead(stopPin) == HIGH;
+    return this->pressed == HIGH;
 }

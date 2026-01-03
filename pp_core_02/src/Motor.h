@@ -37,8 +37,11 @@ class Motor {
      * set everything needed to have a functional motor
      * - set direction pin to output
      * - set step pin to output
+     * - ...
      */
     bool begin();
+
+    bool enable();
 
     void applySettings(motor_settings___t drctCur);
 

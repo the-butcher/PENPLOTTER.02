@@ -17,29 +17,29 @@ void driverBegin(void* pvParameters) {
     vTaskDelete(NULL);
 }
 
-void _setup() {
+// void _setup() {
 
-    neopixelWrite(RGB_BUILTIN, 1, 1, 0);  // yellow
+//     neopixelWrite(RGB_BUILTIN, 1, 1, 0);  // yellow
 
-    Serial.begin(115200);
-    delay(5000);
-    Serial.print("PP: setup - 1, ESP.getFreeHeap(): ");
-    Serial.println(ESP.getFreeHeap());
+//     Serial.begin(115200);
+//     delay(5000);
+//     Serial.print("PP: setup - 1, ESP.getFreeHeap(): ");
+//     Serial.println(ESP.getFreeHeap());
 
-    Coords::begin();
-    Motors::begin();
-    Driver::begin();
+//     Coords::begin();
+//     Motors::begin();
+//     Driver::begin();
 
-    block_planxy_f___t blockPlanxy_f = {297.0, 420.0, -8.0, 5.0, 20.0};
-    block_planxy_i64_t blockPlanxy_i = Coords::planxyToPlanxy(blockPlanxy_f);
-    Device::accept(blockPlanxy_i);
+//     block_planxy_f___t blockPlanxy_f = {297.0, 420.0, -8.0, 5.0, 20.0};
+//     block_planxy_i64_t blockPlanxy_i = Coords::planxyToPlanxy(blockPlanxy_f);
+//     Device::accept(blockPlanxy_i);
 
-    for (uint8_t p = 0; p < 1000; p++) {
-        Driver::pulse();
-    }
+//     for (uint8_t p = 0; p < 1000; p++) {
+//         Driver::pulse();
+//     }
 
-    neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // off
-}
+//     neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // off
+// }
 
 void setup() {
 
@@ -50,16 +50,25 @@ void setup() {
     Serial.print("PP: setup - 1, ESP.getFreeHeap(): ");
     Serial.println(ESP.getFreeHeap());
 
-    Switches::begin();
+    Switches::begin();  // initial regular RGB values, actually turns off RGB led
+
+    Motors::begin();
+    Coords::begin();  // adds machine homing coordinates
+    Device::begin();  // currently does nothing
+
+    pinMode(GPIO_NUM_44, OUTPUT);
 
     Blesrv::begin();
     Serial.println("PP: setup - waiting for bluetooth connection ...");
     uint64_t connectCounter = 0;
     while (!Blesrv::isConnected()) {
-        if (connectCounter % 10 == 0) {
-            neopixelWrite(RGB_BUILTIN, 0, 0, 2);  // blue
+        if (connectCounter % 5 == 0) {
+            // neopixelWrite(RGB_BUILTIN, 0, 0, 2);  // blue
+            digitalWrite(GPIO_NUM_44, LOW);  // LOW is ON
+            Blesrv::setLedStatus(BLUE_STATUS__ON);
             delay(200);
-            neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // off
+            // neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // off
+            Blesrv::setLedStatus(BLUE_STATUS_OFF);
             delay(200);
         } else {
             delay(400);
@@ -67,12 +76,10 @@ void setup() {
         connectCounter++;
     }
     Serial.println("PP: setup - ... bluetooth connection established");
-    neopixelWrite(RGB_BUILTIN, 0, 0, 2);  // blue
+    Blesrv::setLedStatus(BLUE_STATUS__ON);
+    // neopixelWrite(RGB_BUILTIN, 0, 0, 2);  // blue
 
-    Motors::begin();
-    Coords::begin();  // adds machine homing coordinates
-    Device::begin();  // currently does nothing
-    // Switches::begin();
+    Motors::enable();
 
     // set initial buffer size and position
     Blesrv::writeBuffSize();
@@ -110,10 +117,11 @@ void loop() {
     Serial.print("acceptMicros: ");
     Serial.println(Device::acceptCount > 0 ? Device::acceptMicros / Device::acceptCount : 0);
 
-    uint8_t rVal = Switches::switchX.isPressed() ? 3 : 0;
-    uint8_t gVal = Switches::switchY.isPressed() ? 3 : 0;
-    uint8_t bVal = Switches::switchZ.isPressed() ? 3 : 0;
-    neopixelWrite(RGB_BUILTIN, rVal, gVal, bVal);
+    Switches::updateNeopixel();
+    // uint8_t rVal = Switches::limitX.isPressed() ? 3 : 0;
+    // uint8_t gVal = Switches::limitY.isPressed() ? 3 : 0;
+    // uint8_t bVal = Switches::limitZ.isPressed() ? 3 : 0;
+    // neopixelWrite(RGB_BUILTIN, rVal, gVal, bVal);
 
     // char outputBuf[128];
     // sprintf(outputBuf, "frqI: %6.2f, lenP__um: %6.2f", Device::frqI, Device::lenP__um);

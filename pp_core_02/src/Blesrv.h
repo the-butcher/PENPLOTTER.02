@@ -11,6 +11,13 @@
 #include "Define.h"
 #include "Motors.h"
 
+typedef enum {
+    BLUE_STATUS__ON,
+    BLUE_STATUS_OFF
+} blue_led_status___e;
+
+const gpio_num_t PIN_LED_BLUE = GPIO_NUM_44;
+
 class Blesrv {
    private:
     static int buffSizeLast;
@@ -25,6 +32,7 @@ class Blesrv {
     static bool isConnected();
     static bool writeBuffSize();
     static bool writePosition();
+    static void setLedStatus(blue_led_status___e status);
 };
 
 #endif
