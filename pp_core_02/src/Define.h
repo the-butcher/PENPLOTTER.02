@@ -1,9 +1,5 @@
 // #define USE_SERIAL
 
-#define LIMIT_X_STOP_PIN 9
-#define LIMIT_Y_STOP_PIN 10
-#define LIMIT_Z_STOP_PIN 11
-
 #define MACHINE_DIM____X 297
 #define MACHINE_DIM____Y 420
 #define MACHINE_DIM____Z -8
@@ -29,30 +25,23 @@
 
 #include <Arduino.h>
 
-// const double MAX_FREQUENCY__Hz = 6000.0;
-const int64_t MAX_FREQUENCY_mHz = 6000000;  // 6000hZ * 1000 => mHz
-const int64_t ONE_ROTATION___um = 40000;
+const int64_t MAX_FREQUENCY_mHz = 6000000;  // 6000hZ * 1000 => mHz (millihertz)
+const int64_t ONE_ROTATION___um = 40000;    // 20 teeth * 2mm teeth spacing of GT2 belt
 const int64_t ONE_ROTATION_Z_um = 60000;
 const int64_t ONE_SECOND_____us = 1000000;
 const int64_t TWO_SECONDS____us = 2000000;
 const int64_t MACHINE_HOME_VXY = 20000;
 const int64_t MACHINE_HOME_V_Z = 5000;
 
-// /**
-//  * internal representation of a planar coordinate
-//  * double used to avoid float problems in interrupts
-//  * https://forum.arduino.cc/t/how-to-do-simple-float-calculations-in-a-interrupt-handler-on-nodemcu-esp32/915384
-//  */
-// typedef struct {
-//     double x;          // x coord with respect to x home (mm)
-//     double y;          // y coord with respect to y home (mm)
-//     double z;          // z coord with respect to z home (mm)
-// } coord_planxy_d___t;  // 24 bytes
-
+/**
+ * internal representation of a planar coordinate
+ * int64_t used to represent coordinates in micrometers (1/1000th millimeter)
+ * https://forum.arduino.cc/t/how-to-do-simple-float-calculations-in-a-interrupt-handler-on-nodemcu-esp32/915384
+ */
 typedef struct {
-    int64_t x;         // x coord with respect to x home (mm)
-    int64_t y;         // y coord with respect to y home (mm)
-    int64_t z;         // z coord with respect to z home (mm)
+    int64_t x;         // x coord with respect to x home (µm)
+    int64_t y;         // y coord with respect to y home (µm)
+    int64_t z;         // z coord with respect to z home (µm)
 } coord_planxy_i64_t;  // 24 bytes
 
 /**
@@ -65,25 +54,17 @@ typedef struct {
     float z;           // z coord with respect to z home (mm)
 } coord_planxy_f___t;  // 12 bytes
 
-// /**
-//  * internal representation of a planar distance with entry and exit speeds
-//  * double used to avoid float problems in interrupts
-//  * https://forum.arduino.cc/t/how-to-do-simple-float-calculations-in-a-interrupt-handler-on-nodemcu-esp32/915384
-//  */
-// typedef struct {
-//     double x;          // exit x coord with respect to x home (mm)
-//     double y;          // exit y coord with respect to y home (mm)
-//     double z;          // exit z coord with respect to z home (mm)
-//     double vi;         // entry speed (mm/s)
-//     double vo;         // exit speed (mm/s)
-// } block_planxy_d___t;  // 40 bytes
-
+/**
+ * internal representation of a planar distance with entry and exit speeds
+ * double used to avoid float problems in interrupts
+ * https://forum.arduino.cc/t/how-to-do-simple-float-calculations-in-a-interrupt-handler-on-nodemcu-esp32/915384
+ */
 typedef struct {
-    int64_t x;         // exit x coord with respect to x home (mm)
-    int64_t y;         // exit y coord with respect to y home (mm)
-    int64_t z;         // exit z coord with respect to z home (mm)
-    int64_t vi;        // entry speed (mm/s)
-    int64_t vo;        // exit speed (mm/s)
+    int64_t x;         // exit x coord with respect to x home (µm)
+    int64_t y;         // exit y coord with respect to y home (µm)
+    int64_t z;         // exit z coord with respect to z home (µm)
+    int64_t vi;        // entry speed (µm/s)
+    int64_t vo;        // exit speed (µm/s)
 } block_planxy_i64_t;  // 40 bytes
 
 /**
@@ -121,15 +102,5 @@ typedef struct {
     int8_t counterIncrement;           // increment to be applied to the counter, either +1 or -1
     motor_microstep__t settingsMicro;  // microstep settings (resolution, pin values)
 } motor_settings___t;                  // 24 bytes
-
-// typedef struct {
-//     block_planxy_d___t dstPlanxy;  // the destination coordinate
-//     coord_corexy_____t vecCorexy;  // the corexy vector for reference (microstepping not multiplied yet)
-//     motor_settings___t settingsA;  // motorSettings A (direction, microstepping, ...)
-//     motor_settings___t settingsB;  // motorSettings B (direction, microstepping, ...)
-//     motor_settings___t settingsZ;  // motorSettings Z (direction, microstepping, ...)
-//     double lengthPlanxy;           // length to destination in mm
-//     uint64_t microsTotal;          // total duration in microseconds to complete this block
-// } block_device_____t;              // 144 bytes
 
 #endif

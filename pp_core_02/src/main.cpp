@@ -6,6 +6,7 @@
 #include "Device.h"
 #include "Driver.h"
 #include "Motors.h"
+#include "Switches.h"
 
 // uint64_t microsProcsMax = 0;
 
@@ -48,6 +49,8 @@ void setup() {
     delay(5000);
     Serial.print("PP: setup - 1, ESP.getFreeHeap(): ");
     Serial.println(ESP.getFreeHeap());
+
+    Switches::begin();
 
     Blesrv::begin();
     Serial.println("PP: setup - waiting for bluetooth connection ...");
@@ -106,6 +109,11 @@ void loop() {
 
     Serial.print("acceptMicros: ");
     Serial.println(Device::acceptCount > 0 ? Device::acceptMicros / Device::acceptCount : 0);
+
+    uint8_t rVal = Switches::switchX.isPressed() ? 3 : 0;
+    uint8_t gVal = Switches::switchY.isPressed() ? 3 : 0;
+    uint8_t bVal = Switches::switchZ.isPressed() ? 3 : 0;
+    neopixelWrite(RGB_BUILTIN, rVal, gVal, bVal);
 
     // char outputBuf[128];
     // sprintf(outputBuf, "frqI: %6.2f, lenP__um: %6.2f", Device::frqI, Device::lenP__um);
