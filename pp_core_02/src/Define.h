@@ -32,6 +32,7 @@ const int64_t ONE_SECOND_____us = 1000000;
 const int64_t TWO_SECONDS____us = 2000000;
 const int64_t MACHINE_HOME_VXY = 20000;
 const int64_t MACHINE_HOME_V_Z = 5000;
+const int64_t IDLE_FREQUENCY_mHz = 10000;  // 10hZ when idle
 
 /**
  * internal representation of a planar coordinate

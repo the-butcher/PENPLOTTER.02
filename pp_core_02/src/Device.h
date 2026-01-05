@@ -7,6 +7,7 @@
 #include "Driver.h"
 #include "Motor.h"
 #include "Motors.h"
+#include "Switches.h"
 
 class Device {
    private:

@@ -57,6 +57,7 @@ void Device::yield() {
  */
 void Device::pulse() {
 
+    Switches::readAll();
     // TODO :: limit switches
 
     // exectute a single bresenham step, https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
@@ -336,7 +337,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         // helper values for adjusting frequencies later on
         Device::frqI_mHz = Device::dPrim * dstPlanxy.vi * 1000L / Device::lenP__um;
         Device::frqO_mHz = Device::dPrim * dstPlanxy.vo * 1000L / Device::lenP__um;
-        Device::frqA2 = (Device::frqO_mHz - Device::frqI_mHz) * 2000000L / Device::durP__us;
+        Device::frqA2 = (Device::frqO_mHz - Device::frqI_mHz) * 2000000L / Device::durP__us;  // this should probably be milliseconds, would likely save multiplication by 1000L in pulse()
         Device::frqII = Device::frqI_mHz * Device::frqI_mHz;
 
 #ifdef USE_SERIAL

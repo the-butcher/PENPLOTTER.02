@@ -13,10 +13,8 @@ class Switches {
     static Switch limitY;
     static Switch limitZ;
     static bool begin();
-    static void handleChangeX();
-    static void handleChangeY();
-    static void handleChangeZ();
-    static bool isAnyLimitPressed();
+    static void readAll();
+    static bool isAnyPressed();
     static void updateNeopixel();
 };
 

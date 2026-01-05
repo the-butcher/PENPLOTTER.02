@@ -22,7 +22,7 @@ class Switch {
      * NOTE :: the switch is wired to the NC (normally-closed) pin on the switch, so it will report being pressed for contact failure also
      */
     bool isPressed();
-    void handleChange();
+    void read();
 };
 
 #endif

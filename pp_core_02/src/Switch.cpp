@@ -7,7 +7,7 @@ Switch::Switch(char id, uint8_t gpin) {
     this->pressed = false;
 }
 
-void Switch::handleChange() {
+void Switch::read() {
     this->pressed = digitalRead(this->gpin);
 }
 

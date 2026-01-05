@@ -16,7 +16,7 @@ bool Driver::begin() {
 #ifndef USE_SERIAL
     Driver::timer = timerBegin(0, Driver::divider, true);  // 8 means 10000000 events per second (10MHz)
     timerAttachInterrupt(Driver::timer, &Driver::pulse, true);
-    Driver::setFrq___mHz(1000L);
+    Driver::setFrq___mHz(IDLE_FREQUENCY_mHz);
     timerAlarmEnable(Driver::timer);
 #endif
 
@@ -38,7 +38,7 @@ void Driver::pulse() {
 }
 
 void Driver::yield() {
-    Driver::setFrq___mHz(1000L);
+    Driver::setFrq___mHz(IDLE_FREQUENCY_mHz);
 }
 
 void Driver::setFrq___mHz(uint64_t frq___mHz) {

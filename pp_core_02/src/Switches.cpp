@@ -8,12 +8,7 @@ Switch Switches::limitY('Y', GPIO_NUM_38);
 Switch Switches::limitZ('Z', GPIO_NUM_40);
 
 bool Switches::begin() {
-    bool success = Switches::limitX.begin() && Switches::limitY.begin() && Switches::limitZ.begin();
-    attachInterrupt(Switches::limitX.ipin, Switches::handleChangeX, CHANGE);
-    attachInterrupt(Switches::limitY.ipin, Switches::handleChangeY, CHANGE);
-    attachInterrupt(Switches::limitZ.ipin, Switches::handleChangeZ, CHANGE);
-    Switches::updateNeopixel();
-    return success;
+    return Switches::limitX.begin() && Switches::limitY.begin() && Switches::limitZ.begin();
 }
 
 void Switches::updateNeopixel() {
@@ -23,18 +18,12 @@ void Switches::updateNeopixel() {
     neopixelWrite(RGB_BUILTIN, rVal, gVal, bVal);
 }
 
-void Switches::handleChangeX() {
-    Switches::limitX.handleChange();
+void Switches::readAll() {
+    Switches::limitX.read();
+    Switches::limitY.read();
+    Switches::limitZ.read();
 }
 
-void Switches::handleChangeY() {
-    Switches::limitY.handleChange();
-}
-
-void Switches::handleChangeZ() {
-    Switches::limitZ.handleChange();
-}
-
-bool Switches::isAnyLimitPressed() {
+bool Switches::isAnyPressed() {
     return Switches::limitX.isPressed() || Switches::limitY.isPressed() || Switches::limitZ.isPressed();
 }
