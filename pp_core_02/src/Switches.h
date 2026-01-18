@@ -14,7 +14,7 @@ class Switches {
     static Switch limitZ;
     static bool begin();
     static void readAll();
-    static bool isAnyPressed();
+    static bool isAnyPressed();  // TODO :: determine need
     static void updateNeopixel();
 };
 

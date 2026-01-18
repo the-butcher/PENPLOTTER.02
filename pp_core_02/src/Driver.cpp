@@ -3,9 +3,6 @@
 hw_timer_t* Driver::timer;
 uint16_t Driver::divider = 8;
 uint64_t Driver::eventsPer1000Second = ONE_SECOND_____us * 1000L * 80L / Driver::divider;  // 10000000
-// uint64_t Driver::microsLast = 0;
-// uint64_t Driver::microsCurr = 0;
-uint64_t Driver::pulseCount = 0;
 uint64_t Driver::frq___mHz = 0;
 
 bool Driver::begin() {
@@ -21,11 +18,6 @@ bool Driver::begin() {
 }
 
 void Driver::pulse() {
-
-    // Driver::microsLast = Driver::microsCurr;
-    // Driver::microsCurr = micros();
-
-    Driver::pulseCount++;
     Device::pulse();
 }
 

@@ -10,5 +10,5 @@ bool Motors::begin() {
 }
 
 coord_corexy_____t Motors::getCurCorexy() {
-    return {Motors::motorA.getCntrCur(), Motors::motorB.getCntrCur(), Motors::motorZ.getCntrCur()};
+    return {Motors::motorA.getCntrCur(), Motors::motorB.getCntrCur(), Motors::motorZ.getCntrCur(), Motors::motorR.getCntrCur()};
 }

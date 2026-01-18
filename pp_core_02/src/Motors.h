@@ -15,7 +15,7 @@ class Motors {
     static Motor motorZ;
     static Motor motorR;
     /**
-     * begin the static Motors instance
+     * begin the static Motors instance (begin all motor instances - a,b,z,r)
      */
     static bool begin();
     /**

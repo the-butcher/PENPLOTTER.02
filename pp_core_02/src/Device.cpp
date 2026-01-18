@@ -11,13 +11,16 @@ int64_t Device::durP__us = 0L;
 Motor* Device::motorPrim = nullptr;
 Motor* Device::motorSec1 = nullptr;
 Motor* Device::motorSec2 = nullptr;
+Motor* Device::motorSec3 = nullptr;
 
 uint32_t Device::cPrim = 0;
 uint32_t Device::dPrim = 0;
 uint32_t Device::dSec1 = 0;
 uint32_t Device::dSec2 = 0;
+uint32_t Device::dSec3 = 0;
 int32_t Device::eSec1 = 0;
 int32_t Device::eSec2 = 0;
+int32_t Device::eSec3 = 0;
 
 bool Device::homedX = false;
 bool Device::homedY = false;
@@ -50,6 +53,7 @@ void Device::yield() {
     Device::motorPrim = nullptr;
     Device::motorSec1 = nullptr;
     Device::motorSec2 = nullptr;
+    Device::motorSec3 = nullptr;
 }
 
 /**
@@ -101,8 +105,13 @@ void Device::pulse() {
             Device::motorSec2->pulse();
             Device::eSec2 = Device::eSec2 - 2 * Device::dPrim;
         }
+        if (eSec3 > 0) {
+            Device::motorSec3->pulse();
+            Device::eSec3 = Device::eSec3 - 2 * Device::dPrim;
+        }
         Device::eSec1 = Device::eSec1 + 2 * Device::dSec1;
         Device::eSec2 = Device::eSec2 + 2 * Device::dSec2;
+        Device::eSec3 = Device::eSec3 + 2 * Device::dSec3;
 
         Device::cPrim++;
         if (Device::cPrim >= Device::dPrim) {  // counter has reached the segment delta
@@ -133,6 +142,8 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     Serial.print(String(dstPlanxy.y));
     Serial.print(", z: ");
     Serial.print(String(dstPlanxy.z));
+    Serial.print(", r: ");
+    Serial.print(String(dstPlanxy.r));
     Serial.print(", vi: ");
     Serial.print(String(dstPlanxy.vi));
     Serial.print(", vo: ");
@@ -184,20 +195,24 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     Serial.print(", y: ");
     Serial.print(String(vecCorexy.b));
     Serial.print(", z: ");
-    Serial.println(String(vecCorexy.z));
+    Serial.print(String(vecCorexy.z));
+    Serial.print(", r: ");
+    Serial.println(String(vecCorexy.r));
     // vecPlanxy, x: 297000, y: 420000, z: -8000
     Serial.print("vecPlanxy, x: ");
     Serial.print(String(vecPlanxy.x));
     Serial.print(", y: ");
     Serial.print(String(vecPlanxy.y));
     Serial.print(", z: ");
-    Serial.println(String(vecPlanxy.z));
+    Serial.print(String(vecPlanxy.z));
+    Serial.print(", r: ");
+    Serial.println(String(vecPlanxy.r));
 #endif
 
     // ~ 9 microseconds
 
     // planar distance to reach destination
-    Device::lenP__um = Coords::toLength(vecPlanxy);  // sqrt(vecPlanxy.x * vecPlanxy.x + vecPlanxy.y * vecPlanxy.y + vecPlanxy.z * vecPlanxy.z);  // Coords::toLength(vecPlanxy);
+    Device::lenP__um = Coords::toLength(vecPlanxy);
 
 #ifdef USE_SERIAL
     // lengthPlanxy: 514463
@@ -221,6 +236,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     uint32_t baseStepsA = abs(vecCorexy.a);
     uint32_t baseStepsB = abs(vecCorexy.b);
     uint32_t baseStepsZ = abs(vecCorexy.z);
+    uint32_t baseStepsR = abs(vecCorexy.r);
 
 #ifdef USE_SERIAL
     // baseStepsA: 4920
@@ -231,7 +247,9 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     Serial.print("baseStepsB: ");
     Serial.println(String(baseStepsB));
     Serial.print("baseStepsZ: ");
-    Serial.println(String(baseStepsZ));
+    Serial.print(String(baseStepsZ));
+    Serial.print("baseStepsR: ");
+    Serial.println(String(baseStepsR));
 #endif
 
     // seconds = length(mm) / speed(mm/s), inverse value used here
@@ -249,6 +267,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     uint64_t frqA_mHz = baseStepsA * maxVMult2 / 1000L;
     uint64_t frqB_mHz = baseStepsB * maxVMult2 / 1000L;
     uint64_t frqZ_mHz = baseStepsZ * maxVMult2 / 1000L;
+    uint64_t frqR_mHz = baseStepsR * maxVMult2 / 1000L;
 
 #ifdef USE_SERIAL
     // frqA__Hz: 191.27
@@ -260,6 +279,8 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     // Serial.println(String(frqB__Hz));
     // Serial.print("frqZ__Hz: ");
     // Serial.println(String(frqZ__Hz));
+    // Serial.print("frqR__Hz: ");
+    // Serial.println(String(frqR__Hz));
     // frqA_mHz: 191265
     // frqB_mHz: 1114935
     // frqZ_mHz: 18660
@@ -269,6 +290,8 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     Serial.println(String(frqB_mHz));
     Serial.print("frqZ__mHz: ");
     Serial.println(String(frqZ_mHz));
+    Serial.print("frqR__mHz: ");
+    Serial.println(String(frqR_mHz));
 #endif
 
     // ~ 16 microseconds
@@ -276,6 +299,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     motor_settings___t motorSettingsA = {PIN_STATUS__LOW, 1, Motors::motorA.findMicrostepSettings(frqA_mHz)};
     motor_settings___t motorSettingsB = {PIN_STATUS__LOW, 1, Motors::motorB.findMicrostepSettings(frqB_mHz)};
     motor_settings___t motorSettingsZ = {PIN_STATUS__LOW, 1, Motors::motorZ.findMicrostepSettings(frqZ_mHz)};
+    motor_settings___t motorSettingsR = {PIN_STATUS__LOW, 1, Motors::motorR.findMicrostepSettings(frqR_mHz)};
 
 #ifdef USE_SERIAL
     // motorSettingsA x8
@@ -287,6 +311,8 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     Serial.println(String(motorSettingsB.settingsMicro.microMlt));
     Serial.print("motorSettingsZ x");
     Serial.println(String(motorSettingsZ.settingsMicro.microMlt));
+    Serial.print("motorSettingsR x");
+    Serial.println(String(motorSettingsR.settingsMicro.microMlt));
 #endif
 
     // ~ 20 microseconds
@@ -303,6 +329,10 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         motorSettingsZ.counterIncrement = -1;
         motorSettingsZ.directVal = PIN_STATUS_HIGH;
     }
+    if (vecCorexy.r < 0) {
+        motorSettingsR.counterIncrement = -1;
+        motorSettingsR.directVal = PIN_STATUS_HIGH;
+    }
 
     if (dstPlanxy.z == VALUE______RESET) {
 
@@ -315,11 +345,12 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         dstPlanxy.z = 10;
     }
 
-    if (vecCorexy.a != 0.0 || vecCorexy.b != 0.0 || vecCorexy.z != 0.0) {
+    if (vecCorexy.a != 0.0 || vecCorexy.b != 0.0 || vecCorexy.z != 0.0 || vecCorexy.r != 0.0) {
 
         uint32_t stepsA = baseStepsA * motorSettingsA.settingsMicro.microMlt;
         uint32_t stepsB = baseStepsB * motorSettingsB.settingsMicro.microMlt;
         uint32_t stepsZ = baseStepsZ * motorSettingsZ.settingsMicro.microMlt;
+        uint32_t stepsR = baseStepsR * motorSettingsR.settingsMicro.microMlt;
 
 #ifdef USE_SERIAL
         // stepsA: 39360
@@ -331,33 +362,51 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         Serial.println(String(stepsB));
         Serial.print("stepsZ: ");
         Serial.println(String(stepsZ));
+        Serial.print("stepsR: ");
+        Serial.println(String(stepsR));
 #endif
 
-        uint32_t maxSteps = max({stepsA, stepsB, stepsZ});
+        uint32_t maxSteps = max({stepsA, stepsB, stepsZ, stepsR});
         if (stepsA == maxSteps) {
             Device::motorPrim = &Motors::motorA;
             Device::motorSec1 = &Motors::motorB;
             Device::motorSec2 = &Motors::motorZ;
+            Device::motorSec3 = &Motors::motorR;
             Device::dPrim = stepsA;
             Device::dSec1 = stepsB;
             Device::dSec2 = stepsZ;
-            // Serial.print("ABZ");
+            Device::dSec3 = stepsR;
+            // Serial.print("ABZR");
         } else if (stepsB == maxSteps) {
             Device::motorPrim = &Motors::motorB;
             Device::motorSec1 = &Motors::motorA;
             Device::motorSec2 = &Motors::motorZ;
+            Device::motorSec3 = &Motors::motorR;
             Device::dPrim = stepsB;
             Device::dSec1 = stepsA;
             Device::dSec2 = stepsZ;
-            // Serial.print("BAZ");
-        } else {
+            Device::dSec3 = stepsR;
+            // Serial.print("BAZR");
+        } else if (stepsZ == maxSteps) {
             Device::motorPrim = &Motors::motorZ;
             Device::motorSec1 = &Motors::motorA;
             Device::motorSec2 = &Motors::motorB;
+            Device::motorSec3 = &Motors::motorR;
             Device::dPrim = stepsZ;
             Device::dSec1 = stepsA;
             Device::dSec2 = stepsB;
-            // Serial.print("ZAB");
+            Device::dSec3 = stepsR;
+            // Serial.print("ZABR");
+        } else {
+            Device::motorPrim = &Motors::motorR;
+            Device::motorSec1 = &Motors::motorA;
+            Device::motorSec2 = &Motors::motorB;
+            Device::motorSec3 = &Motors::motorZ;
+            Device::dPrim = stepsR;
+            Device::dSec1 = stepsA;
+            Device::dSec2 = stepsB;
+            Device::dSec3 = stepsZ;
+            // Serial.print("RABZ");
         }
         // Serial.println("");
 
@@ -388,6 +437,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         Device::cPrim = 0;
         Device::eSec1 = 2 * Device::dSec1 - Device::dPrim;
         Device::eSec2 = 2 * Device::dSec2 - Device::dPrim;
+        Device::eSec3 = 2 * Device::dSec3 - Device::dPrim;
 
         // ~ 26 microseconds
 
@@ -395,6 +445,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         Motors::motorA.applySettings(motorSettingsA);
         Motors::motorB.applySettings(motorSettingsB);
         Motors::motorZ.applySettings(motorSettingsZ);
+        Motors::motorR.applySettings(motorSettingsR);
 
         // ~ 33 microseconds
 

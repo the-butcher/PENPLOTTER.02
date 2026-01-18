@@ -14,6 +14,7 @@ class Device {
     static Motor* motorPrim;  // primary motor
     static Motor* motorSec1;  // secondary motor 1
     static Motor* motorSec2;  // secondary motor 2
+    static Motor* motorSec3;  // secondary motor 3
 
    public:
     static uint64_t acceptMicros;
@@ -90,6 +91,11 @@ class Device {
     static uint32_t dSec2;
 
     /**
+     * secondary delta 3
+     */
+    static uint32_t dSec3;
+
+    /**
      * error 1
      */
     static int32_t eSec1;
@@ -98,6 +104,11 @@ class Device {
      * error 2
      */
     static int32_t eSec2;
+
+    /**
+     * error 3
+     */
+    static int32_t eSec3;
 };
 
 #endif

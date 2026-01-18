@@ -23,7 +23,7 @@ void deserializeData(const uint8_t* inputBytes, uint16_t offset, T& outputStruct
 
 class BlesrvCallbacks : public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
-// do nothing
+        // do nothing
     };
     void onDisconnect(BLEServer* pServer) {
         // TODO :: clear all coordinates
