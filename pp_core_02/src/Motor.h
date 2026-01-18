@@ -13,9 +13,7 @@ const motor_microstep__t MICROSTEP_T__32 = {32, PIN_STATUS_HIGH, PIN_STATUS__LOW
 class Motor {
    private:
     bool supportsMicro;
-    gpio_num_t enablePin;
-    gpio_num_t stepPin;
-    gpio_num_t directPin;
+
     motor_microstep__t settingsMicro[4];
     gpio_num_t microPin0;  // pin to apply the micrVal0 setting to
     gpio_num_t microPin1;
@@ -26,6 +24,10 @@ class Motor {
     int64_t maxBaseFrq_mHz[4];
 
    public:
+    gpio_num_t enablePin;
+    gpio_num_t stepPin;
+    gpio_num_t directPin;
+
     motor_settings___t setsCur;
 
     Motor(char id, gpio_num_t enablePin, gpio_num_t stepPin, gpio_num_t directPin, motor_microstep__t settingsMicro);
@@ -41,7 +43,7 @@ class Motor {
      */
     bool begin();
 
-    bool enable();
+    bool powerup();
 
     void applySettings(motor_settings___t drctCur);
 

@@ -3,9 +3,9 @@
 // NOK :: 19, 35, 36, 39
 // OK  :: (20), 21, 37, 38, 40, 47
 // 20 is somehow associated with USB power as USB will disconnect on pin level change
-Switch Switches::limitX('X', GPIO_NUM_47);
-Switch Switches::limitY('Y', GPIO_NUM_38);
-Switch Switches::limitZ('Z', GPIO_NUM_40);
+Switch Switches::limitX('X', GPIO_NUM_40);
+Switch Switches::limitY('Y', GPIO_NUM_47);
+Switch Switches::limitZ('Z', GPIO_NUM_38);
 
 bool Switches::begin() {
     return Switches::limitX.begin() && Switches::limitY.begin() && Switches::limitZ.begin();

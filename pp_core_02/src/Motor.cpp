@@ -1,5 +1,6 @@
 #include "Motor.h"
 
+#ifdef USE_SERIAL
 void logSettingsMicro(char id, motor_microstep__t settingsMicro) {
     Serial.print(id);
     Serial.print(", x");
@@ -12,6 +13,7 @@ void logSettingsMicro(char id, motor_microstep__t settingsMicro) {
     Serial.print(String(settingsMicro.microVal2));
     Serial.println("]");
 }
+#endif
 
 Motor::Motor(char id, gpio_num_t enablePin, gpio_num_t stepPin, gpio_num_t directPin, motor_microstep__t settingsMicro) {
     this->id = id;
@@ -97,11 +99,13 @@ bool Motor::begin() {
     pinMode(this->enablePin, OUTPUT);
     pinMode(this->stepPin, OUTPUT);
     pinMode(this->directPin, OUTPUT);
-    pinMode(this->microPin0, OUTPUT);
-    pinMode(this->microPin1, OUTPUT);
-    pinMode(this->microPin2, OUTPUT);
+    if (this->supportsMicro) {
+        pinMode(this->microPin0, OUTPUT);
+        pinMode(this->microPin1, OUTPUT);
+        pinMode(this->microPin2, OUTPUT);
+    }
 
-    // enable the motor (for motors not having dynamic microswitching, this pulls the micropins high so any jumpers set will be in effect)
+    // set the enable pin to low initially
     digitalWrite(this->enablePin, PIN_STATUS__LOW);
     digitalWrite(this->stepPin, PIN_STATUS__LOW);
     digitalWrite(this->directPin, PIN_STATUS__LOW);
@@ -111,8 +115,7 @@ bool Motor::begin() {
     return true;
 }
 
-bool Motor::enable() {
-
+bool Motor::powerup() {
     // enable the motor (for motors not having dynamic microswitching, this pulls the micropins high so any jumpers set will be in effect)
     digitalWrite(this->enablePin, PIN_STATUS_HIGH);
     return true;

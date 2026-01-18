@@ -23,7 +23,7 @@ class Device {
     /**
      * set the A and B counters to reflect the given planar coordinate
      */
-    static void reset(int64_t x, int64_t y);
+    static void reset(int64_t x_um, int64_t y_um);
 
     // static bool accept(block_device_____t& dstDevice);  // accept a new destination coordinate and immediately start moving to, or drawing to that coordinate
     static bool accept(block_planxy_i64_t dstPlanxy);  // accept a new destination coordinate and immediately start moving to, or drawing to that coordinate

@@ -16,7 +16,7 @@ typedef enum {
     BLUE_STATUS_OFF
 } blue_led_status___e;
 
-const gpio_num_t PIN_LED_BLUE = GPIO_NUM_44;
+// const gpio_num_t PIN_LED_BLUE = GPIO_NUM_44;
 
 class Blesrv {
    private:

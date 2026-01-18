@@ -7,23 +7,21 @@ uint32_t Coords::nextBlockIndex = 0;
 uint32_t Coords::blockIndex = 0;
 
 bool Coords::begin() {
-    // Coords::accept({0.0, 0.0, VALUE______RESET, MACHINE_HOME_V_Z, MACHINE_HOME_V_Z});   // move until z-swtich touched, z-homing the machine and accepting the z-home coordinate as 0.0
-    // Coords::accept({-VALUE______RESET, 0.0, 0.0, MACHINE_HOME_VXY, MACHINE_HOME_VXY});  // move until x-switch touched, x-homing the machine and accepting the limit x-coordinate as -10.0
-    // Coords::accept({0.0, 0.0, 0.0, MACHINE_HOME_VXY, MACHINE_HOME_VXY});                // backup x to 0.0
-    // Coords::accept({0.0, -VALUE______RESET, 0.0, MACHINE_HOME_VXY, MACHINE_HOME_VXY});  // move until y-swtich touched, y-homing the machine and accepting the limit y-coordinate as -20.0
-    // Coords::accept({0.0, 0.0, 0.0, MACHINE_HOME_VXY, MACHINE_HOME_VXY});                // backup y to 0.0, the machine will now be at x0.0, y0.0 with a lifted pen at z0.0
 
-    // stores a first set of blocks to the buffers (no need to check for prev index in Coords::accept)
-    // Serial.println("-- block :: begin  --> coords -----------------------------------------");
-    // Coords::blockBufferDevice[Coords::blockIndex % BLOCK_BUFFER_SIZE] = {{0, 0, 0}, {0, 0, 0}, {PIN_STATUS__LOW, 1, Motors::motorA.findMicrostepSettings(0)}, {PIN_STATUS__LOW, 1, Motors::motorB.findMicrostepSettings(0)}, {PIN_STATUS__LOW, 1, Motors::motorZ.findMicrostepSettings(0)}};
-    // Coords::blockIndex++;
+    block_planxy_f___t homeCoordinateZ = {0.0, 0.0, VALUE______RESET, DEVICE___V__Z_mms, DEVICE___V__Z_mms};
+    Coords::addBlock(Coords::planxyToPlanxy(homeCoordinateZ));  // move until z-swtich touched, z-homing the machine and accepting the z-home coordinate as 0.0
 
-    // Serial.println("-- block :: begin  --> coords -----------------------------------------");
-    // for (double r = 0; r < PI * 2; r += PI / 180) {
-    //     Coords::addBlock({sin(r) * 100, cos(r) * 100 - 100, 0, 30, 30});
-    // }
+    block_planxy_f___t homeCoordinateX = {-VALUE______RESET, 0.0, 0.0, DEVICE___V_XY_mms, DEVICE___V_XY_mms};  // move until x-switch touched, x-homing the machine and accepting the limit x-coordinate as -10.0
+    Coords::addBlock(Coords::planxyToPlanxy(homeCoordinateX));
 
+    homeCoordinateX = {0.0, 0.0, 0.0, DEVICE___V_XY_mms, DEVICE___V_XY_mms};  // backup x to 0.0
+    Coords::addBlock(Coords::planxyToPlanxy(homeCoordinateX));
 
+    block_planxy_f___t homeCoordinateY = {0.0, -VALUE______RESET, 0.0, DEVICE___V_XY_mms, DEVICE___V_XY_mms};  // move until y-swtich touched, y-homing the machine and accepting the limit y-coordinate as -20.0
+    Coords::addBlock(Coords::planxyToPlanxy(homeCoordinateY));
+
+    homeCoordinateY = {0.0, 0.0, 0.0, DEVICE___V_XY_mms, DEVICE___V_XY_mms};  // backup y to 0.0, the machine will now be at x0.0, y0.0 with a lifted pen at z0.0
+    Coords::addBlock(Coords::planxyToPlanxy(homeCoordinateY));
 
     return true;
 }

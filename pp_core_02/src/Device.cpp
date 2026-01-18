@@ -30,14 +30,14 @@ bool Device::begin() {
     return true;
 }
 
-void Device::reset(int64_t x, int64_t y) {
+void Device::reset(int64_t x_um, int64_t y_um) {
 
     // calculate current position
     coord_corexy_____t curCorexy = Motors::getCurCorexy();
     coord_planxy_i64_t curPlanxy = Coords::corexyToPlanxy(curCorexy);
 
     // adjust current position
-    curPlanxy = {x, y, curPlanxy.z};
+    curPlanxy = {x_um, y_um, curPlanxy.z};
     curCorexy = Coords::planxyToCorexy(curPlanxy);
 
     // apply counters to motors A and B
@@ -58,7 +58,36 @@ void Device::yield() {
 void Device::pulse() {
 
     Switches::readAll();
-    // TODO :: limit switches
+
+    if (Switches::limitX.isPressed()) {
+        if (!Device::homedX) {
+            Device::yield();  // will set all motors to nullptr
+            Device::homedX = true;
+            Device::reset(-10000L, 0L);  // treat this location as -10mm/0mm
+        } else {
+            // TODO :: maybe implement another threshold as yield criteria
+        }
+    }
+
+    if (Switches::limitY.isPressed()) {
+        if (!Device::homedY) {
+            Device::yield();
+            Device::homedY = true;
+            Device::reset(0L, -20000L);  // treat this location as 0mm/-20mm, TODO :: use current x value instead of 0
+        } else {
+            // TODO :: maybe implement another threshold as yield criteria
+        }
+    }
+
+    if (Switches::limitZ.isPressed()) {
+        if (!Device::homedZ) {
+            Device::yield();  // will set all motors to nullptr
+            Device::homedZ = true;
+            Motors::motorZ.setCntrCur(0);
+        } else {
+            // TODO :: maybe implement another threshold as yield criteria
+        }
+    }
 
     // exectute a single bresenham step, https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
     if (Device::motorPrim != nullptr) {
@@ -129,12 +158,12 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
 
     // TODO :: check if this case still occurs and maybe handle in another way
     if (dstPlanxy.vi == 0 && dstPlanxy.vo == 0) {
-        dstPlanxy.vi = MACHINE_HOME_VXY;
-        dstPlanxy.vo = MACHINE_HOME_VXY;
+        dstPlanxy.vi = DEVICE___V_XY_ums;
+        dstPlanxy.vo = DEVICE___V_XY_ums;
     } else if (dstPlanxy.vi == 0) {
-        dstPlanxy.vi = MACHINE_HOME_VXY;
+        dstPlanxy.vi = DEVICE___V_XY_ums;
     } else if (dstPlanxy.vo == 0) {
-        dstPlanxy.vo = MACHINE_HOME_VXY;
+        dstPlanxy.vo = DEVICE___V_XY_ums;
     }
 
     // src coordinates

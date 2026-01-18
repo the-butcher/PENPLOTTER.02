@@ -18,7 +18,6 @@ class Motors {
      * begin the static Motors instance
      */
     static bool begin();
-    static bool enable();
     /**
      * get current corexy coordinate from motor counters
      */

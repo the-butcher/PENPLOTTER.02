@@ -11,19 +11,12 @@ class Driver {
     static hw_timer_t* timer;
     static uint16_t divider;
     static uint64_t eventsPer1000Second;
-    static uint64_t microsLast;
-    static uint64_t microsCurr;
+    // static uint64_t microsLast;
+    // static uint64_t microsCurr;
 
    public:
     static uint64_t pulseCount;
-
-    static double frequencyPulse;
-    static uint64_t microsPulse;
-    /**
-     * the theoretical max-frequency, given the execution time
-     */
-    static double frequencyProcs;
-    static uint64_t microsProcs;
+    static uint64_t frq___mHz;
 
     static bool begin();
     static void pulse();

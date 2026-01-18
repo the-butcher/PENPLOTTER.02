@@ -1,4 +1,5 @@
 // #define USE_SERIAL
+#define USE_DISPLAY
 
 #define MACHINE_DIM____X 297
 #define MACHINE_DIM____Y 420
@@ -30,9 +31,16 @@ const int64_t ONE_ROTATION___um = 40000;    // 20 teeth * 2mm teeth spacing of G
 const int64_t ONE_ROTATION_Z_um = 60000;
 const int64_t ONE_SECOND_____us = 1000000;
 const int64_t TWO_SECONDS____us = 2000000;
-const int64_t MACHINE_HOME_VXY = 20000;
-const int64_t MACHINE_HOME_V_Z = 5000;
+const float DEVICE___V_XY_mms = 20.0;
+const int64_t DEVICE___V_XY_ums = 20000;
+const float DEVICE___V__Z_mms = 5.0;
 const int64_t IDLE_FREQUENCY_mHz = 10000;  // 10hZ when idle
+
+typedef enum {
+    DSP_STATUS_PEND,
+    DSP_STATUS___OK,
+    DSP_STATUS_FAIL
+} dsp_status_______e;
 
 /**
  * internal representation of a planar coordinate
