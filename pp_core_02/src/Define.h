@@ -1,5 +1,6 @@
-// #define USE_SERIAL
-#define USE_DISPLAY
+// #define USE____DEBUG
+#define USE__DISPLAY
+#define USE_SWITCHES
 
 #define MACHINE_DIM____X 297
 #define MACHINE_DIM____Y 420
@@ -7,7 +8,7 @@
 
 #define VALUE______RESET 9999.0
 
-#define COMMAND_SERVICE___UUID "791320d5-7f0a-4b58-89f6-cc2031479da4"
+#define COMMAND_SERVICE___UUID "791320d5-7f0a-4b58-89f6-cc2031479da5"
 
 #define COMMAND_BUFF_SIZE_UUID "067c3c93-eb63-4905-b292-478642f8ae99"
 #define DESCRIB_BUFF_SIZE_UUID "9dc82658-4e03-403d-95ba-79bfe97576b4"
@@ -27,15 +28,22 @@
 #include <Arduino.h>
 
 const int64_t MAX_FREQUENCY_mHz = 6000000;  // 6000hZ * 1000 => mHz (millihertz)
-const int64_t ONE_ROTATION___um = 40000;    // 20 teeth * 2mm teeth spacing of GT2 belt
-const int64_t ONE_ROTATION_Z_um = 60000;
-const int64_t ONE_ROTATION_R_um = 60000;  // temporary :: TODO :: determine a final value, yet this may not be too bad 60000 * 18 / 30 = 36000
+
+// const int64_t ONE_ROTATION___um = 40000;   // 20 teeth * 2mm teeth spacing of GT2 belt
+// const int64_t ONE_ROTATION_Z_um = 108078;  // 17.2mm lever * 2 * PI
+
+const int64_t MOTOR_STEPS____mm = 40;  // (steps-per-revolution * millistepping (half, quarter, ...)) / mm-belt-per-revolution, i.e. (400steps * 4quarterstep) / (20t * 2mm) = 40
+const int64_t MOTOR_STEPS_Z__mm = 30;
+const int64_t MOTOR_STEPS_R1_dg = 200 * 8 * 30;
+const int64_t MOTOR_STEPS_R2_dg = 18 * 360;  // MOTOR STEPS R would be 66.6667, needs to be expressed as fraction in code
+
 const int64_t ONE_SECOND_____us = 1000000;
 const int64_t TWO_SECONDS____us = 2000000;
 const float DEVICE___V_XY_mms = 20.0;
 const int64_t DEVICE___V_XY_ums = 20000;
 const float DEVICE___V__Z_mms = 5.0;
-const int64_t IDLE_FREQUENCY_mHz = 10000;  // 10hZ when idle
+const int64_t DEVICE___V__R_uds = 360000;  // 100 deg per second (TODO :: revisit and adapt)
+const int64_t IDLE_FREQUENCY_mHz = 10000;  // 10Hz when idle
 
 typedef enum {
     DSP_STATUS_PEND,

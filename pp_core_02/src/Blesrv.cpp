@@ -24,6 +24,7 @@ void deserializeData(const uint8_t* inputBytes, uint16_t offset, T& outputStruct
 class BlesrvCallbacks : public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
         // do nothing
+        Serial.println("something connected");
     };
     void onDisconnect(BLEServer* pServer) {
         // TODO :: clear all coordinates
@@ -47,6 +48,18 @@ class BuffValueCallbacks : public BLECharacteristicCallbacks {
         block_planxy_i64_t blockPlanxy_i;
         for (uint16_t newValueIndex = 0; newValueIndex < COMMAND_BUFF_VALS_SIZE * sizeof(block_planxy_f___t); newValueIndex += sizeof(block_planxy_f___t)) {
             deserializeData(newValue, newValueIndex, blockPlanxy_f);
+            // Serial.print("x: ");
+            // Serial.print(String(blockPlanxy_f.x, 2));
+            // Serial.print(", y: ");
+            // Serial.print(String(blockPlanxy_f.y, 2));
+            // Serial.print(", z: ");
+            // Serial.print(String(blockPlanxy_f.z, 2));
+            // Serial.print(", r: ");
+            // Serial.print(String(blockPlanxy_f.r, 2));
+            // Serial.print(", vi: ");
+            // Serial.print(String(blockPlanxy_f.vi, 2));
+            // Serial.print(", vo: ");
+            // Serial.println(String(blockPlanxy_f.vo, 2));
             blockPlanxy_i = Coords::planxyToPlanxy(blockPlanxy_f);
             Coords::addBlock(blockPlanxy_i);
         }
@@ -111,10 +124,11 @@ bool Blesrv::begin() {
 
     BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(COMMAND_SERVICE___UUID);
-    pAdvertising->addServiceUUID(COMMAND_BUFF_VALS_UUID);
-    pAdvertising->addServiceUUID(COMMAND_POSITION__UUID);
-    pAdvertising->setScanResponse(true);
-    BLEDevice::startAdvertising();
+    pServer->getAdvertising()->start();
+    // pAdvertising->addServiceUUID(COMMAND_BUFF_VALS_UUID);
+    // pAdvertising->addServiceUUID(COMMAND_POSITION__UUID);
+    // pAdvertising->setScanResponse(true);
+    // BLEDevice::startAdvertising();
 
     return true;
 }

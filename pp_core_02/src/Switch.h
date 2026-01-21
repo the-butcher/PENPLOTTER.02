@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "Define.h"
+
 class Switch {
    private:
     bool pressed;

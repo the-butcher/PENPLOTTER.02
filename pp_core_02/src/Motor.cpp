@@ -1,6 +1,6 @@
 #include "Motor.h"
 
-#ifdef USE_SERIAL
+#ifdef USE____DEBUG
 void logSettingsMicro(char id, motor_microstep__t settingsMicro) {
     Serial.print(id);
     Serial.print(", x");
@@ -83,9 +83,9 @@ void Motor::applySettings(motor_settings___t setsCur) {
         digitalWrite(this->microPin0, this->setsCur.settingsMicro.microVal0);
         digitalWrite(this->microPin1, this->setsCur.settingsMicro.microVal1);
         digitalWrite(this->microPin2, this->setsCur.settingsMicro.microVal2);
-#ifdef USE_SERIAL
-        logSettingsMicro(this->id, this->setsCur.settingsMicro);
-#endif
+        // #ifdef USE____DEBUG
+        //         logSettingsMicro(this->id, this->setsCur.settingsMicro);
+        // #endif
     }
 }
 

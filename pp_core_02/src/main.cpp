@@ -4,7 +4,7 @@
 #include "Coords.h"
 #include "Define.h"
 #include "Device.h"
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
 #include "Display.h"
 #endif
 #include "Driver.h"
@@ -18,35 +18,92 @@ void driverBegin(void* pvParameters) {
     vTaskDelete(NULL);
 }
 
-// void _setup() {
+void _setup() {
 
-//     neopixelWrite(RGB_BUILTIN, 1, 1, 0);  // yellow
+    neopixelWrite(RGB_BUILTIN, 1, 1, 0);  // yellow
 
-//     Serial.begin(115200);
-//     delay(5000);
-//     Serial.print("PP: setup - 1, ESP.getFreeHeap(): ");
-//     Serial.println(ESP.getFreeHeap());
+    Serial.begin(115200);
+    delay(5000);
+    Serial.print("PP: setup - 1, ESP.getFreeHeap(): ");
+    Serial.println(ESP.getFreeHeap());
 
-//     Coords::begin();
-//     Motors::begin();
-//     Driver::begin();
+    Coords::begin();
+    Motors::begin();
+    Driver::begin();
 
-//     block_planxy_f___t blockPlanxy_f = {297.0, 420.0, -8.0, 5.0, 20.0};
-//     block_planxy_i64_t blockPlanxy_i = Coords::planxyToPlanxy(blockPlanxy_f);
-//     Device::accept(blockPlanxy_i);
+    block_planxy_f___t blockPlanxy_f1 = {0.0, 0.0, -3.0, 380.0, 0.0, 18.0};
+    // block_planxy_f___t blockPlanxy_f1 = {100.0, 100.0, 0.0, 0.0, 10.0, 10.0};
+    block_planxy_i64_t blockPlanxy_i1 = Coords::planxyToPlanxy(blockPlanxy_f1);
+    coord_corexy_____t coordCorexy_i1 = Coords::planxyToCorexy(blockPlanxy_i1);
+    coord_planxy_i64_t blockPlanxy_i2 = Coords::corexyToPlanxy(coordCorexy_i1);
+    coord_planxy_f___t blockPlanxy_f2 = Coords::planxyToPlanxy(blockPlanxy_i2);
+    Device::accept(blockPlanxy_i1);
 
-//     for (uint8_t p = 0; p < 1000; p++) {
-//         Driver::pulse();
-//     }
+    // Serial.print("pf1 x: ");
+    // Serial.print(String(blockPlanxy_f1.x, 2));
+    // Serial.print(", y: ");
+    // Serial.print(String(blockPlanxy_f1.y, 2));
+    // Serial.print(", z: ");
+    // Serial.print(String(blockPlanxy_f1.z, 2));
+    // Serial.print(", r: ");
+    // Serial.print(String(blockPlanxy_f1.r, 2));
+    // Serial.print(", vi: ");
+    // Serial.print(String(blockPlanxy_f1.vi, 2));
+    // Serial.print(", vo: ");
+    // Serial.println(String(blockPlanxy_f1.vo, 2));
 
-//     neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // off
-// }
+    // Serial.print("pi1 x: ");
+    // Serial.print(String(blockPlanxy_i1.x));
+    // Serial.print(", y: ");
+    // Serial.print(String(blockPlanxy_i1.y));
+    // Serial.print(", z: ");
+    // Serial.print(String(blockPlanxy_i1.z));
+    // Serial.print(", r: ");
+    // Serial.print(String(blockPlanxy_i1.r));
+    // Serial.print(", vi: ");
+    // Serial.print(String(blockPlanxy_i1.vi));
+    // Serial.print(", vo: ");
+    // Serial.println(String(blockPlanxy_i1.vo));
+
+    // Serial.print("ci1 a: ");
+    // Serial.print(String(coordCorexy_i1.a));
+    // Serial.print(", b: ");
+    // Serial.print(String(coordCorexy_i1.b));
+    // Serial.print(", z: ");
+    // Serial.print(String(coordCorexy_i1.z));
+    // Serial.print(", r: ");
+    // Serial.println(String(coordCorexy_i1.r));
+
+    // Serial.print("pi2 x: ");
+    // Serial.print(String(blockPlanxy_i2.x));
+    // Serial.print(", y: ");
+    // Serial.print(String(blockPlanxy_i2.y));
+    // Serial.print(", z: ");
+    // Serial.print(String(blockPlanxy_i2.z));
+    // Serial.print(", r: ");
+    // Serial.println(String(blockPlanxy_i2.r));
+
+    // Serial.print("pf2 x: ");
+    // Serial.print(String(blockPlanxy_f1.x, 2));
+    // Serial.print(", y: ");
+    // Serial.print(String(blockPlanxy_f1.y, 2));
+    // Serial.print(", z: ");
+    // Serial.print(String(blockPlanxy_f1.z, 2));
+    // Serial.print(", r: ");
+    Serial.println(String(blockPlanxy_f1.r, 2));
+
+    neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // off
+}
+
+void _loop() {
+    delay(1000);
+}
 
 void setup() {
 
     neopixelWrite(RGB_BUILTIN, 1, 1, 0);  // yellow
 
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     Serial.println("PP: setup - 1, Display::powerup()");
     Display::powerup();
 #endif
@@ -56,32 +113,32 @@ void setup() {
     Serial.print("PP: setup - 1, ESP.getFreeHeap(): ");
     Serial.println(ESP.getFreeHeap());
 
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     Display::addMessage("begin motors");
 #endif
 
     Motors::begin();  // TODO :: do this motor by motor with delays
 
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     Display::addMessage("begin coords");
 #endif
 
     Coords::begin();  // adds machine homing coordinates
 
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     Display::addMessage("begin device");
 #endif
 
     Device::begin();  // currently does nothing
 
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     Display::addMessage("begin bluetooth");
 #endif
 
     Blesrv::begin();
     Serial.println("PP: setup - waiting for bluetooth connection ...");
     uint64_t connectCounter = 0;
-    while (!Blesrv::isConnected() && connectCounter < 5) {
+    while (!Blesrv::isConnected()) {  //  && connectCounter < 5
         if (connectCounter % 5 == 0) {
             Blesrv::setLedStatus(BLUE_STATUS__ON);
             delay(100);
@@ -105,13 +162,13 @@ void setup() {
     Blesrv::writePosition();
     Serial.println("PP: setup - ... initial values written");
 
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     Display::addMessage("begin switches");
 #endif
 
     Switches::begin();  // initial regular RGB values, actually turns off RGB led when no switches are pressed
 
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     Display::addMessage("power motors a and b");
 #endif
 
@@ -119,21 +176,21 @@ void setup() {
     Motors::motorB.powerup();
     delay(1000);
 
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     Display::addMessage("power motor z");
 #endif
 
     Motors::motorZ.powerup();
     delay(1000);
 
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     Display::addMessage("power motor r");
 #endif
 
     Motors::motorR.powerup();
     delay(1000);
 
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     Display::addMessage("begin driver");
 #endif
 
@@ -154,25 +211,11 @@ void loop() {
     // Serial.print("acceptMicros: ");
     // Serial.println(Device::acceptCount > 0 ? Device::acceptMicros / Device::acceptCount : 0);
 
-    // if (loopCounter % 5 == 1) {
-    //     for (uint16_t p = 0; p < 320; p++) {
-    //         Motors::motorR.pulse();
-    //         delay(1);
-    //     }
-    // }
-
-#ifdef USE_DISPLAY
+#ifdef USE__DISPLAY
     if (loopCounter % 10 == 0) {
         Display::drawCounters();
     }
 #endif
-
-    // #ifdef USE_SERIAL
-    //     Serial.print("switches: ");
-    //     Serial.print(Switches::limitX.isPressed());
-    //     Serial.print(Switches::limitY.isPressed());
-    //     Serial.println(Switches::limitZ.isPressed());
-    // #endif
 
     Switches::updateNeopixel();
 

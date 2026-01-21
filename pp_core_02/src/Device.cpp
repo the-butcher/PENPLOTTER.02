@@ -135,7 +135,7 @@ void Device::pulse() {
 
 bool Device::accept(block_planxy_i64_t dstPlanxy) {
 
-#ifdef USE_SERIAL
+#ifdef USE____DEBUG
     Serial.print("dstPlanxy, x: ");
     Serial.print(String(dstPlanxy.x));
     Serial.print(", y: ");
@@ -188,8 +188,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     coord_corexy_____t vecCorexy = Coords::toCorexyVector(srcCorexy, dstCorexy);
     coord_planxy_i64_t vecPlanxy = Coords::toPlanxyVector(srcPlanxy, dstPlanxy);
 
-#ifdef USE_SERIAL
-    // vecCorexy, x: -4920, y: 28680, z: -480
+#ifdef USE____DEBUG
     Serial.print("vecCorexy, x: ");
     Serial.print(String(vecCorexy.a));
     Serial.print(", y: ");
@@ -198,7 +197,6 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     Serial.print(String(vecCorexy.z));
     Serial.print(", r: ");
     Serial.println(String(vecCorexy.r));
-    // vecPlanxy, x: 297000, y: 420000, z: -8000
     Serial.print("vecPlanxy, x: ");
     Serial.print(String(vecPlanxy.x));
     Serial.print(", y: ");
@@ -211,11 +209,10 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
 
     // ~ 9 microseconds
 
-    // planar distance to reach destination
-    Device::lenP__um = Coords::toLength(vecPlanxy);
+    Device::lenP__um = Coords::toPlanLength(vecPlanxy);  // planar distance to reach destination
+    uint64_t lenR__ud = abs(vecPlanxy.r);                // rotational distance in microdegrees
 
-#ifdef USE_SERIAL
-    // lengthPlanxy: 514463
+#ifdef USE____DEBUG
     Serial.print("lenP__um: ");
     Serial.println(String(Device::lenP__um));
 #endif
@@ -224,12 +221,47 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
 
     // duration to reach destination (each block needs to have linear acceleration or constant speed)
     Device::durP__us = Device::lenP__um * TWO_SECONDS____us / (dstPlanxy.vi + dstPlanxy.vo);
+    int64_t durD__us = lenR__ud * ONE_SECOND_____us / DEVICE___V__R_uds;  // the minimum duration for the required rotation to complete
 
-#ifdef USE_SERIAL
-    // microsTotal: 41157040
+#ifdef USE____DEBUG
     Serial.print("durP__us: ");
     Serial.println(String(Device::durP__us));
+    Serial.print("durD__us: ");
+    Serial.println(String(durD__us));
 #endif
+
+    if (Device::durP__us == 0) {  // rotation only
+
+        dstPlanxy.vi = DEVICE___V__R_uds;  // max rotation speed
+        dstPlanxy.vo = DEVICE___V__R_uds;
+        Device::lenP__um = lenR__ud;
+        Device::durP__us = durD__us;
+
+#ifdef USE____DEBUG
+        Serial.print("vi (new): ");
+        Serial.print(String(dstPlanxy.vi));
+        Serial.print(", vo (new): ");
+        Serial.println(String(dstPlanxy.vo));
+        Serial.print("durD__us (new): ");
+        Serial.println(String(durD__us));
+#endif
+
+    } else if (durD__us > Device::durP__us) {  // rotation requires more time than the planar distance, speed and duration adaption required
+
+        dstPlanxy.vi = dstPlanxy.vi * Device::durP__us / durD__us;
+        dstPlanxy.vo = dstPlanxy.vo * Device::durP__us / durD__us;
+
+        Device::durP__us = Device::lenP__um * TWO_SECONDS____us / (dstPlanxy.vi + dstPlanxy.vo);
+
+#ifdef USE____DEBUG
+        Serial.print("vi (new): ");
+        Serial.print(String(dstPlanxy.vi));
+        Serial.print(", vo (new): ");
+        Serial.println(String(dstPlanxy.vo));
+        Serial.print("durD__us (new): ");
+        Serial.println(String(durD__us));
+#endif
+    }
 
     // ~ 15 microseconds
 
@@ -238,16 +270,13 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     uint32_t baseStepsZ = abs(vecCorexy.z);
     uint32_t baseStepsR = abs(vecCorexy.r);
 
-#ifdef USE_SERIAL
-    // baseStepsA: 4920
-    // baseStepsB: 28680
-    // baseStepsZ: 480
+#ifdef USE____DEBUG
     Serial.print("baseStepsA: ");
     Serial.println(String(baseStepsA));
     Serial.print("baseStepsB: ");
     Serial.println(String(baseStepsB));
     Serial.print("baseStepsZ: ");
-    Serial.print(String(baseStepsZ));
+    Serial.println(String(baseStepsZ));
     Serial.print("baseStepsR: ");
     Serial.println(String(baseStepsR));
 #endif
@@ -255,10 +284,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     // seconds = length(mm) / speed(mm/s), inverse value used here
     uint64_t maxVMult2 = Device::lenP__um > 0 ? max(dstPlanxy.vi, dstPlanxy.vo) * 1000000L / Device::lenP__um : 0;
 
-#ifdef USE_SERIAL
-    // maxVMult: 0.0389
-    // Serial.print("maxVMult: ");
-    // Serial.println(String(maxVMult, 4));
+#ifdef USE____DEBUG
     Serial.print("maxVMult2: ");
     Serial.println(String(maxVMult2));
 #endif
@@ -269,21 +295,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     uint64_t frqZ_mHz = baseStepsZ * maxVMult2 / 1000L;
     uint64_t frqR_mHz = baseStepsR * maxVMult2 / 1000L;
 
-#ifdef USE_SERIAL
-    // frqA__Hz: 191.27
-    // frqB__Hz: 1114.95
-    // frqZ__Hz: 18.66
-    // Serial.print("frqA__Hz: ");
-    // Serial.println(String(frqA__Hz));
-    // Serial.print("frqB__Hz: ");
-    // Serial.println(String(frqB__Hz));
-    // Serial.print("frqZ__Hz: ");
-    // Serial.println(String(frqZ__Hz));
-    // Serial.print("frqR__Hz: ");
-    // Serial.println(String(frqR__Hz));
-    // frqA_mHz: 191265
-    // frqB_mHz: 1114935
-    // frqZ_mHz: 18660
+#ifdef USE____DEBUG
     Serial.print("frqA__mHz: ");
     Serial.println(String(frqA_mHz));
     Serial.print("frqB__mHz: ");
@@ -301,10 +313,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
     motor_settings___t motorSettingsZ = {PIN_STATUS__LOW, 1, Motors::motorZ.findMicrostepSettings(frqZ_mHz)};
     motor_settings___t motorSettingsR = {PIN_STATUS__LOW, 1, Motors::motorR.findMicrostepSettings(frqR_mHz)};
 
-#ifdef USE_SERIAL
-    // motorSettingsA x8
-    // motorSettingsB x4
-    // motorSettingsZ x1
+#ifdef USE____DEBUG
     Serial.print("motorSettingsA x");
     Serial.println(String(motorSettingsA.settingsMicro.microMlt));
     Serial.print("motorSettingsB x");
@@ -352,10 +361,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         uint32_t stepsZ = baseStepsZ * motorSettingsZ.settingsMicro.microMlt;
         uint32_t stepsR = baseStepsR * motorSettingsR.settingsMicro.microMlt;
 
-#ifdef USE_SERIAL
-        // stepsA: 39360
-        // stepsB: 114720
-        // stepsZ: 480
+#ifdef USE____DEBUG
         Serial.print("stepsA: ");
         Serial.println(String(stepsA));
         Serial.print("stepsB: ");
@@ -418,7 +424,7 @@ bool Device::accept(block_planxy_i64_t dstPlanxy) {
         Device::frqA2 = (Device::frqO_mHz - Device::frqI_mHz) * 2000000L / Device::durP__us;  // this should probably be milliseconds, would likely save multiplication by 1000L in pulse()
         Device::frqII = Device::frqI_mHz * Device::frqI_mHz;
 
-#ifdef USE_SERIAL
+#ifdef USE____DEBUG
         // frqI_mHz: 1114948
         // frqO_mHz: 4459795
         Serial.print("frqI_mHz: ");

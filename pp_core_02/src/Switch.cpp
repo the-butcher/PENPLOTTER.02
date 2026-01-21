@@ -12,10 +12,14 @@ void Switch::read() {
 }
 
 bool Switch::begin() {
-    pinMode(this->gpin, INPUT_PULLUP);
+    pinMode(this->gpin, INPUT_PULLUP);  // this makes HIGH (=pressed) the default and the switch must actively pull it low
     return true;
 }
 
 bool Switch::isPressed() {
+#ifdef USE_SWITCHES
     return this->pressed == HIGH;
+#else
+    return false;
+#endif
 }

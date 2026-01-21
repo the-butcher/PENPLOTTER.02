@@ -41,7 +41,7 @@ class Coords {
     static block_planxy_i64_t planxyToPlanxy(block_planxy_f___t& blockPlanxy);
     static coord_planxy_f___t planxyToPlanxy(coord_planxy_i64_t& blockPlanxy);
 
-    static uint64_t toLength(coord_planxy_i64_t& coordPlanxy);
+    static uint64_t toPlanLength(coord_planxy_i64_t& coordPlanxy);
 };
 
 #endif
